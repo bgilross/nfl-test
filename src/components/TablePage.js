@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
+import PlayerTable from './PlayerTable'
 
-const TablePage = ({ gameIDs, playerList }) => {
+const TablePage = ({ gameIDs, playerList, setPlayerList }) => {
   const [allData, setAllData] = useState([])
-  const [boxScores, setBoxScores] = useState([])
-  const [scoreInfo, setScoreInfo] = useState([])
   const [loading, setLoading] = useState(true)
-  const [playersScores, setPlayerStats] = useState([])
-
+  const [playersStats, setPlayersStats] = useState([])
+  const [gameResults, setGameResults] = useState([])
   const apiUrl = `https://cdn.espn.com/core/nfl/boxscore?xhr=1&gameId=`
-
+  let numWeeks = 4
   const fetchAllGameData = async () => {
     setLoading(true)
     try {
@@ -25,46 +24,97 @@ const TablePage = ({ gameIDs, playerList }) => {
     }
   }
 
+  const createData = () => {
+    console.log('Running Create Data')
 
-  const createData = (allData, playerList) => {
-    const boxScore = allData.data.gamepackageJSON.boxscore.players.statistics
-
-    return playerList.map((player) => {
+    let tempPlayersStats = []
+    //loop through each player on the player list
+    playerList.forEach((player) => {
       let playerStats = { name: player }
+      console.log('Play Loop running, Player: ', player)
 
-      boxScore.map((statCategory) => {
-        const foundPlayer = statCategory.athletes.find(
-          (athlete) =>
-            athlete.athlete.displayName.toLowerCase() === player.toLowerCase()
-        )
+      allData.forEach((item) => {
+        const boxScore = item.data.gamepackageJSON.boxscore.players
+        const header = item.data.gamepackageJSON.header
 
-        // If player is found and stats are available, push them into playerStats
-        if (foundPlayer) {
-                statCategory.descriptions.map((item) => {
-                    playerStats.
+        boxScore?.forEach((team, i) => {
+          console.log('Processing Team Data: ', team, i)
+          team.statistics?.forEach((statCategory) => {
+            const foundPlayer = statCategory.athletes.find(
+              (athlete) =>
+                athlete.athlete.displayName.toLowerCase() ===
+                player.toLowerCase()
+            )
+
+            if (
+              foundPlayer &&
+              ['passing', 'rushing', 'receiving', 'fumbles'].includes(
+                statCategory.name.toLowerCase()
+              )
+            ) {
+              console.log('Found Player running: ', foundPlayer)
+              const weekIndex = item.data.gamepackageJSON.header.week - 1
+
+              if (!playerStats[statCategory.name]) {
+                playerStats[statCategory.name] = {}
+
+                statCategory.descriptions.forEach((desc) => {
+                  playerStats[statCategory.name][desc] = new Array(
+                    numWeeks
+                  ).fill(0)
                 })
+              }
 
-
-
-          playerStats.stats.push({
-            category: statCategory.name,
-            keys: statCategory.keys || [],
-            stats: foundPlayer.stats || [],
-            descriptions: statCategory.descriptions || [],
+              foundPlayer.stats.forEach((statValue, index) => {
+                console.log('stat value: ', statValue)
+                const description = statCategory.descriptions[index]
+                playerStats[statCategory.name][description][weekIndex] =
+                  statValue
+              })
+            }
           })
-        }
-
-        return null // Returning null here as we are not using map's return
+        })
       })
-
-      return playerStats // Return the player stats object
+      tempPlayersStats.push(playerStats)
+      console.log('TempPlayerStats: ', tempPlayersStats)
+      console.log('PlayerStats: ', playerStats)
     })
+    setPlayersStats(tempPlayersStats)
   }
 
   useEffect(() => {
     fetchAllGameData()
   }, [gameIDs])
 
-  return <div>TablePage</div>
+  useEffect(() => {
+    if (allData.length > 0) {
+      createData()
+    }
+  }, [allData, playerList])
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  return (
+    <div>
+      <h1>Table Page</h1>
+      <h2>{playerList}</h2>
+      <h2>
+        {playersStats.map((player, i) => (
+          <div key={i}>Name: {player.name}</div>
+        ))}
+      </h2>
+
+      {playersStats.map((player, i) => (
+        <PlayerTable
+          key={i}
+          player={player}
+          setPlayerList={setPlayerList}
+          allData={allData}
+        />
+      ))}
+    </div>
+  )
 }
 export default TablePage

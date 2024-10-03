@@ -7,96 +7,101 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 
-const PlayerTable = ({ playerName, gameIDs }) => {
+const PlayerTable = ({ player, setPlayerList }) => {
+  const categories = Object.keys(player).filter((key) => key !== 'name')
+  const numWeeks = Object.values(player[categories[0]])[0].length
 
-   
-    const rushingStats = [
-        "Rushing Attempts",
-        "Yards",
-        "Yards Per Rushing Attempt",
-        "Touchdowns",
-        "Longest Run",
-    ]
-
-    const receivingStats = [
-        "Receptions",
-        "Yards",
-        "Yards Per Reception",
-        "Touchdowns",
-        "Longest Reception",
-        "Receiving Targets",        
-    ]
-
-    const getData = () => {
-        let receivingData = []
-        let rushingData = []
-    }
-
-
-  function createData(name, calories, fat, carbs, protein) {
-    return { name, calories, fat, carbs, protein }
+  const removePlayer = () => {
+    // Filter the player out of the playerList
+    setPlayerList((prevPlayerList) =>
+      prevPlayerList.filter((item) => item !== player.name)
+    )
   }
-
-  const rows = [
-    createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-    createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-    createData('Eclair', 262, 16.0, 24, 6.0),
-    createData('Cupcake', 305, 3.7, 67, 4.3),
-    createData('Gingerbread', 356, 16.0, 49, 3.9),
-  ]
 
   return (
     <div>
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+      <h1>Player Table Component</h1>
+      <h2>Name: {player.name} </h2>
+      <button onClick={removePlayer}>REMOVE</button>
+
+      <TableContainer component={Paper} elevation={7}>
+        <Table
+          sx={{ minWidth: 650 }}
+          padding="none"
+          size="small"
+          aria-label="simple table"
+        >
           <TableHead>
             <TableRow>
               <TableCell> STATISTIC </TableCell>
-              {playerData?.map((data, index) => (
-                <TableCell align="right" key={index}>
-                  Wk{index + 1}
-                </TableCell>
+              {[...Array(numWeeks)].map((_, i) => (
+                <TableCell key={i}>W:{i + 1}</TableCell>
               ))}
             </TableRow>
           </TableHead>
           <TableBody>
-            {playerData.map((data, index) => (
+            {categories.map((category) => (
+              <React.Fragment key={category}>
+                <TableRow key={category}>
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    colSpan={numWeeks + 1}
+                    style={{ fontWeight: 'bold' }}
+                  >
+                    {category.toUpperCase()}
+                  </TableCell>
+                </TableRow>
 
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              <TableCell>Dessert (100g serving)</TableCell>
-              <TableCell align="right">Calories</TableCell>
-              <TableCell align="right">Fat&nbsp;(g)</TableCell>
-              <TableCell align="right">Carbs&nbsp;(g)</TableCell>
-              <TableCell align="right">Protein&nbsp;(g)</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow
-                key={row.name}
-                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-              >
-                <TableCell component="th" scope="row">
-                  {row.name}
-                </TableCell>
-                <TableCell align="right">{row.calories}</TableCell>
-                <TableCell align="right">{row.fat}</TableCell>
-                <TableCell align="right">{row.carbs}</TableCell>
-                <TableCell align="right">{row.protein}</TableCell>
-              </TableRow>
+                {Object.keys(player[category]).map((description) => (
+                  <TableRow key={description}>
+                    <TableCell component="th" scope="row">
+                      {description}
+                    </TableCell>
+                    {player[category][description].map((statValue, i) => (
+                      <TableCell key={i}>{statValue}</TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
     </div>
+
+    // <div>
+
+    //   <TableContainer component={Paper}>
+    //     <Table sx={{ minWidth: 650 }} aria-label="simple table">
+    //       <TableHead>
+    //         <TableRow>
+    //           <TableCell>Dessert (100g serving)</TableCell>
+    //           <TableCell align="right">Calories</TableCell>
+    //           <TableCell align="right">Fat&nbsp;(g)</TableCell>
+    //           <TableCell align="right">Carbs&nbsp;(g)</TableCell>
+    //           <TableCell align="right">Protein&nbsp;(g)</TableCell>
+    //         </TableRow>
+    //       </TableHead>
+    //       <TableBody>
+    //         {rows.map((row) => (
+    //           <TableRow
+    //             key={row.name}
+    //             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+    //           >
+    //             <TableCell component="th" scope="row">
+    //               {row.name}
+    //             </TableCell>
+    //             <TableCell align="right">{row.calories}</TableCell>
+    //             <TableCell align="right">{row.fat}</TableCell>
+    //             <TableCell align="right">{row.carbs}</TableCell>
+    //             <TableCell align="right">{row.protein}</TableCell>
+    //           </TableRow>
+    //         ))}
+    //       </TableBody>
+    //     </Table>
+    //   </TableContainer>
+    // </div>
   )
 }
 export default PlayerTable
