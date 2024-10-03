@@ -7,6 +7,7 @@ const TablePage = ({ gameIDs, playerList, setPlayerList }) => {
   const [loading, setLoading] = useState(true)
   const [playersStats, setPlayersStats] = useState([])
   const [gameResults, setGameResults] = useState([])
+
   const apiUrl = `https://cdn.espn.com/core/nfl/boxscore?xhr=1&gameId=`
   let numWeeks = 4
   const fetchAllGameData = async () => {
