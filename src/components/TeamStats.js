@@ -1,4 +1,4 @@
-import stats from '../data/modified_data_with_team_names.json'
+import GridBox from './GridBox'
 import TeamStatsDisplay from './TeamStatsDisplay'
 
 const TeamStats = ({ teamName1, teamName2 }) => {
@@ -8,8 +8,10 @@ const TeamStats = ({ teamName1, teamName2 }) => {
     <div>
       TeamStats
       <button onClick={handleCheckData}>Check Data</button>
-      <TeamStatsDisplay teamName={teamName1} />
-      <TeamStatsDisplay teamName={teamName2} />
+      <GridBox>
+        <TeamStatsDisplay teamName={teamName1} />
+        <TeamStatsDisplay teamName={teamName2} />
+      </GridBox>
     </div>
   )
 }

@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import PlayerTable from './PlayerTable'
 import Grid from '@mui/material/Grid2'
-import Box from '@mui/material/Box'
-import { styled } from '@mui/material/styles'
+import GridBox from './GridBox'
 
 const TablePage = ({ gameIDs, playerList, setPlayerList }) => {
   const [allData, setAllData] = useState([])
@@ -160,31 +159,18 @@ const TablePage = ({ gameIDs, playerList, setPlayerList }) => {
   }
 
   return (
-    // <div style={{ flex: 'flex' }}>
-    //   {playersStats.map((player, i) => (
-    //     <PlayerTable
-    //       key={i}
-    //       player={player}
-    //       setPlayerList={setPlayerList}
-    //       allData={allData}
-    //     />
-    //   ))}
-    // </div>
-
-    <Box sx={{ flexGrow: 1 }}>
-      <Grid container spacing={2}>
-        {playersStats.map((player, i) => (
-          <Grid size={{ xs: 12, sm: 6, lg: 4, xl: 3 }}>
-            <PlayerTable
-              key={i}
-              player={player}
-              setPlayerList={setPlayerList}
-              allData={allData}
-            />
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
+    <GridBox>
+      {playersStats.map((player, i) => (
+        <Grid size={{ xs: 12, sm: 6, lg: 4, xl: 3 }}>
+          <PlayerTable
+            key={i}
+            player={player}
+            setPlayerList={setPlayerList}
+            allData={allData}
+          />
+        </Grid>
+      ))}
+    </GridBox>
   )
 }
 export default TablePage

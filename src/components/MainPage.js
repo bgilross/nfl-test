@@ -3,6 +3,7 @@ import axios from 'axios'
 import GameStats from './GameStats'
 import TablePage from './TablePage'
 import TeamStats from './TeamStats'
+import PaperContainer from './PaperContainer'
 
 const MainPage = () => {
   const [teamName1, setTeamName1] = useState('Buc')
@@ -66,42 +67,44 @@ const MainPage = () => {
 
   return (
     <div>
-      <input
-        type="text"
-        name="teamName1"
-        id="teamName1"
-        value={teamName1}
-        onChange={handleTeam1TextChange}
-      />
-      <input
-        type="text"
-        name="teamName2"
-        id="teamName2"
-        value={teamName2}
-        onChange={handleTeam2TextChange}
-      />
-      <button onClick={fetchAllGameIDs}>Get Data</button>
-      <ul>
-        {gameIds.map((item, i) => (
-          <li key={i}>{item}</li>
-        ))}
-      </ul>
-      {/* <button onClick={apiTest}>API TEST</button> */}
-      <div>
+      <PaperContainer>
         <input
           type="text"
-          name="playerName"
-          id="playerName"
-          value={playerName}
-          onChange={handlePlayerNameChange}
+          name="teamName1"
+          id="teamName1"
+          value={teamName1}
+          onChange={handleTeam1TextChange}
         />
-        <button onClick={handleAddPlayer}>Add Player</button>
-        {/* <div>
-          {playerList.map((player, index) => (
-            <h1 key={index}>Player List Map : {player}</h1>
+        <input
+          type="text"
+          name="teamName2"
+          id="teamName2"
+          value={teamName2}
+          onChange={handleTeam2TextChange}
+        />
+        <button onClick={fetchAllGameIDs}>Get Data</button>
+        <ul>
+          {gameIds.map((item, i) => (
+            <li key={i}>{item}</li>
           ))}
-        </div> */}
-      </div>
+        </ul>
+        {/* <button onClick={apiTest}>API TEST</button> */}
+        <div>
+          <input
+            type="text"
+            name="playerName"
+            id="playerName"
+            value={playerName}
+            onChange={handlePlayerNameChange}
+          />
+          <button onClick={handleAddPlayer}>Add Player</button>
+          {/* <div>
+            {playerList.map((player, index) => (
+              <h1 key={index}>Player List Map : {player}</h1>
+            ))}
+          </div> */}
+        </div>
+      </PaperContainer>
       <TeamStats teamName1={teamName1} teamName2={teamName2} />
       <div style={{ padding: '4px' }}>
         <TablePage
