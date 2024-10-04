@@ -8,8 +8,13 @@ import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 
 const PlayerTable = ({ player, setPlayerList }) => {
-  const categories = Object.keys(player).filter((key) => key !== 'name')
-  const numWeeks = Object.values(player[categories[0]])[0].length
+  const { gamesData, categories } = player
+  const numWeeks = gamesData?.length
+
+  //   const categories = Object.keys(player.categories).filter(
+  //     (key) => key !== 'name'
+  //   )
+  //   const numWeeks = Object.values(player.categories[categories[0]])[0].length
 
   const removePlayer = () => {
     // Filter the player out of the playerList
@@ -18,48 +23,77 @@ const PlayerTable = ({ player, setPlayerList }) => {
     )
   }
 
+  const handleValueTest = () => {
+    console.log('GamesData.length: ', gamesData.length)
+    console.log('Categories, and length: ', categories, categories.length)
+  }
+
+  if (!gamesData || !categories) {
+    return <div> Loading </div>
+  }
+
   return (
-    <div>
+    <div
+      style={{
+        padding: '4px',
+      }}
+    >
+      {/* <button onClick={handleValueTest}>Get Values</button>
       <h1>Player Table Component</h1>
-      <h2>Name: {player.name} </h2>
+      <h2>Name: {player.name} </h2> */}
       <button onClick={removePlayer}>REMOVE</button>
 
       <TableContainer component={Paper} elevation={7}>
-        <Table
-          sx={{ minWidth: 650 }}
-          padding="none"
-          size="small"
-          aria-label="simple table"
-        >
+        <Table padding="none" size="small" aria-label="simple table">
           <TableHead>
             <TableRow>
-              <TableCell> STATISTIC </TableCell>
-              {[...Array(numWeeks)].map((_, i) => (
-                <TableCell key={i}>W:{i + 1}</TableCell>
+              <TableCell>
+                <div>STATISTIC</div>
+                <div>{player.name}</div>
+              </TableCell>
+              {gamesData.map((game, index) => (
+                <TableCell align="right" key={index}>
+                  <div>W{index + 1}</div>
+                  <div>{game.awayTeam.abbreviation}</div>
+                  <div>@</div>
+                  <div>{game.homeTeam.abbreviation}</div>
+                  <div>{game.awayTeam.score}</div>
+                  <div>{game.homeTeam.score}</div>
+                </TableCell>
               ))}
             </TableRow>
           </TableHead>
           <TableBody>
-            {categories.map((category) => (
-              <React.Fragment key={category}>
-                <TableRow key={category}>
+            {Object.entries(categories).map(([categoryName, stats]) => (
+              <React.Fragment key={categoryName}>
+                {/* Display the category name (e.g., Rushing, Receiving) */}
+                <TableRow>
                   <TableCell
                     component="th"
                     scope="row"
                     colSpan={numWeeks + 1}
                     style={{ fontWeight: 'bold' }}
                   >
-                    {category.toUpperCase()}
+                    {categoryName.toUpperCase()}
                   </TableCell>
                 </TableRow>
 
-                {Object.keys(player[category]).map((description) => (
+                {/* Loop over each stat description (e.g., Yards, Touchdowns) */}
+                {Object.keys(stats).map((description) => (
                   <TableRow key={description}>
                     <TableCell component="th" scope="row">
                       {description}
                     </TableCell>
-                    {player[category][description].map((statValue, i) => (
-                      <TableCell key={i}>{statValue}</TableCell>
+                    {/* Render the stat values for each week */}
+                    {stats[description].map((statValue, i) => (
+                      <TableCell
+                        style={{ paddingRight: '4px' }}
+                        sx={{ borderRight: '1px solid black' }}
+                        align="right"
+                        key={i}
+                      >
+                        {statValue !== null ? `${statValue}` : '-'}
+                      </TableCell>
                     ))}
                   </TableRow>
                 ))}
@@ -69,39 +103,6 @@ const PlayerTable = ({ player, setPlayerList }) => {
         </Table>
       </TableContainer>
     </div>
-
-    // <div>
-
-    //   <TableContainer component={Paper}>
-    //     <Table sx={{ minWidth: 650 }} aria-label="simple table">
-    //       <TableHead>
-    //         <TableRow>
-    //           <TableCell>Dessert (100g serving)</TableCell>
-    //           <TableCell align="right">Calories</TableCell>
-    //           <TableCell align="right">Fat&nbsp;(g)</TableCell>
-    //           <TableCell align="right">Carbs&nbsp;(g)</TableCell>
-    //           <TableCell align="right">Protein&nbsp;(g)</TableCell>
-    //         </TableRow>
-    //       </TableHead>
-    //       <TableBody>
-    //         {rows.map((row) => (
-    //           <TableRow
-    //             key={row.name}
-    //             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-    //           >
-    //             <TableCell component="th" scope="row">
-    //               {row.name}
-    //             </TableCell>
-    //             <TableCell align="right">{row.calories}</TableCell>
-    //             <TableCell align="right">{row.fat}</TableCell>
-    //             <TableCell align="right">{row.carbs}</TableCell>
-    //             <TableCell align="right">{row.protein}</TableCell>
-    //           </TableRow>
-    //         ))}
-    //       </TableBody>
-    //     </Table>
-    //   </TableContainer>
-    // </div>
   )
 }
 export default PlayerTable

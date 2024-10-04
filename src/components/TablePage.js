@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import PlayerTable from './PlayerTable'
+import Grid from '@mui/material/Grid2'
+import Box from '@mui/material/Box'
+import { styled } from '@mui/material/styles'
 
 const TablePage = ({ gameIDs, playerList, setPlayerList }) => {
   const [allData, setAllData] = useState([])
@@ -25,21 +28,63 @@ const TablePage = ({ gameIDs, playerList, setPlayerList }) => {
     }
   }
 
-  const createData = () => {
-    console.log('Running Create Data')
+  const extractGameInfo = (header) => {
+    const weekNumber = header.week
+    const competition = header.competitions[0]
+    const gameDate = competition.date
 
+    const teams = competition.competitors.map((team) => {
+      return {
+        teamName: team.team.displayName,
+        homeAway: team.homeAway,
+        score: team.score,
+        winner: team.winner ? 'W' : 'L',
+        abbreviation: team.team.abbreviation,
+      }
+    })
+
+    const homeTeam = teams.find((team) => team.homeAway === 'home')
+    const awayTeam = teams.find((team) => team.homeAway === 'away')
+
+    return {
+      week: weekNumber,
+      date: gameDate,
+      homeTeam: {
+        name: homeTeam.teamName,
+        score: homeTeam.score,
+        result: homeTeam.winner,
+        abbreviation: homeTeam.abbreviation,
+      },
+      awayTeam: {
+        name: awayTeam.teamName,
+        score: awayTeam.score,
+        result: awayTeam.winner,
+        abbreviation: awayTeam.abbreviation,
+      },
+    }
+  }
+
+  const createData = () => {
     let tempPlayersStats = []
+    let tempGamesData = []
     //loop through each player on the player list
     playerList.forEach((player) => {
-      let playerStats = { name: player }
-      console.log('Play Loop running, Player: ', player)
+      let playerStats = { name: player, gamesData: [], categories: {} }
 
       allData.forEach((item) => {
         const boxScore = item.data.gamepackageJSON.boxscore.players
         const header = item.data.gamepackageJSON.header
 
+        const homeTeam = header.competitions[0].competitors.find(
+          (team) => team.homeAway === 'home'
+        )
+        const awayTeam = header.competitions[0].competitors.find(
+          (team) => team.homeAway === 'away'
+        )
+
+        let playerInGame = false
+
         boxScore?.forEach((team, i) => {
-          console.log('Processing Team Data: ', team, i)
           team.statistics?.forEach((statCategory) => {
             const foundPlayer = statCategory.athletes.find(
               (athlete) =>
@@ -53,32 +98,49 @@ const TablePage = ({ gameIDs, playerList, setPlayerList }) => {
                 statCategory.name.toLowerCase()
               )
             ) {
-              console.log('Found Player running: ', foundPlayer)
+              playerInGame = true
               const weekIndex = item.data.gamepackageJSON.header.week - 1
 
-              if (!playerStats[statCategory.name]) {
-                playerStats[statCategory.name] = {}
+              if (!playerStats.categories[statCategory.name]) {
+                playerStats.categories[statCategory.name] = {}
 
                 statCategory.descriptions.forEach((desc) => {
-                  playerStats[statCategory.name][desc] = new Array(
+                  playerStats.categories[statCategory.name][desc] = new Array(
                     numWeeks
                   ).fill(0)
                 })
               }
 
               foundPlayer.stats.forEach((statValue, index) => {
-                console.log('stat value: ', statValue)
                 const description = statCategory.descriptions[index]
-                playerStats[statCategory.name][description][weekIndex] =
-                  statValue
+                playerStats.categories[statCategory.name][description][
+                  weekIndex
+                ] = statValue
               })
             }
           })
         })
+        if (playerInGame) {
+          playerStats.gamesData.push({
+            week: header.week,
+            date: header.competitions[0].date,
+            homeTeam: {
+              name: homeTeam.team.displayName,
+              abbreviation: homeTeam.team.abbreviation,
+              score: homeTeam.score,
+              result: homeTeam.winner ? 'W' : 'L',
+            },
+            awayTeam: {
+              name: awayTeam.team.displayName,
+              abbreviation: awayTeam.team.abbreviation,
+              score: awayTeam.score,
+              result: awayTeam.winner ? 'W' : 'L',
+            },
+          })
+        }
+        console.log('PlayerStats got pushed: ', playerStats)
       })
       tempPlayersStats.push(playerStats)
-      console.log('TempPlayerStats: ', tempPlayersStats)
-      console.log('PlayerStats: ', playerStats)
     })
     setPlayersStats(tempPlayersStats)
   }
@@ -98,24 +160,31 @@ const TablePage = ({ gameIDs, playerList, setPlayerList }) => {
   }
 
   return (
-    <div>
-      <h1>Table Page</h1>
-      <h2>{playerList}</h2>
-      <h2>
-        {playersStats.map((player, i) => (
-          <div key={i}>Name: {player.name}</div>
-        ))}
-      </h2>
+    // <div style={{ flex: 'flex' }}>
+    //   {playersStats.map((player, i) => (
+    //     <PlayerTable
+    //       key={i}
+    //       player={player}
+    //       setPlayerList={setPlayerList}
+    //       allData={allData}
+    //     />
+    //   ))}
+    // </div>
 
-      {playersStats.map((player, i) => (
-        <PlayerTable
-          key={i}
-          player={player}
-          setPlayerList={setPlayerList}
-          allData={allData}
-        />
-      ))}
-    </div>
+    <Box sx={{ flexGrow: 1 }}>
+      <Grid container spacing={2}>
+        {playersStats.map((player, i) => (
+          <Grid size={{ xs: 12, sm: 6, lg: 4, xl: 3 }}>
+            <PlayerTable
+              key={i}
+              player={player}
+              setPlayerList={setPlayerList}
+              allData={allData}
+            />
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
   )
 }
 export default TablePage

@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import GameStats from './GameStats'
 import TablePage from './TablePage'
+import TeamStats from './TeamStats'
 
 const MainPage = () => {
-  const [teamName1, setTeamName1] = useState('Falcons')
-  const [teamName2, setTeamName2] = useState('Buc')
+  const [teamName1, setTeamName1] = useState('Buc')
+  const [teamName2, setTeamName2] = useState('Falcons')
   const [gameIds, setGameIds] = useState([])
   const [playerList, setPlayerList] = useState([])
   const [playerName, setPlayerName] = useState('')
@@ -65,7 +66,6 @@ const MainPage = () => {
 
   return (
     <div>
-      Main Page
       <input
         type="text"
         name="teamName1"
@@ -86,7 +86,7 @@ const MainPage = () => {
           <li key={i}>{item}</li>
         ))}
       </ul>
-      <button onClick={apiTest}>API TEST</button>
+      {/* <button onClick={apiTest}>API TEST</button> */}
       <div>
         <input
           type="text"
@@ -96,17 +96,14 @@ const MainPage = () => {
           onChange={handlePlayerNameChange}
         />
         <button onClick={handleAddPlayer}>Add Player</button>
-        <div>
+        {/* <div>
           {playerList.map((player, index) => (
             <h1 key={index}>Player List Map : {player}</h1>
           ))}
-        </div>
+        </div> */}
       </div>
-      <div>
-        playerList: {playerList}
-        playerName: {playerName}
-      </div>
-      <div>
+      <TeamStats teamName1={teamName1} teamName2={teamName2} />
+      <div style={{ padding: '4px' }}>
         <TablePage
           playerList={playerList}
           gameIDs={gameIds}
