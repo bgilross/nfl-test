@@ -7,25 +7,24 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 
-const PlayerTable = ({ player, setPlayerList }) => {
+const PlayerTable = ({ player, setPlayerList, setPlayersStats }) => {
   const { gamesData, categories } = player
   const numWeeks = gamesData?.length
 
-  //   const categories = Object.keys(player.categories).filter(
-  //     (key) => key !== 'name'
-  //   )
-  //   const numWeeks = Object.values(player.categories[categories[0]])[0].length
-
   const removePlayer = () => {
-    // Filter the player out of the playerList
     setPlayerList((prevPlayerList) =>
       prevPlayerList.filter((item) => item !== player.name)
+    )
+
+    setPlayersStats((prevPlayersStats) =>
+      prevPlayersStats.filter((item) => item.name !== player.name)
     )
   }
 
   const handleValueTest = () => {
     console.log('GamesData.length: ', gamesData.length)
     console.log('Categories, and length: ', categories, categories.length)
+    console.log('Player: ', player)
   }
 
   if (!gamesData || !categories) {
@@ -38,11 +37,6 @@ const PlayerTable = ({ player, setPlayerList }) => {
         padding: '4px',
       }}
     >
-      {/* <button onClick={handleValueTest}>Get Values</button>
-      <h1>Player Table Component</h1>
-      <h2>Name: {player.name} </h2> */}
-      <button onClick={removePlayer}>REMOVE</button>
-
       <TableContainer component={Paper} elevation={7}>
         <Table padding="none" size="small" aria-label="simple table">
           <TableHead>
@@ -50,6 +44,7 @@ const PlayerTable = ({ player, setPlayerList }) => {
               <TableCell>
                 <div>STATISTIC</div>
                 <div>{player.name}</div>
+                <button onClick={removePlayer}>REMOVE</button>
               </TableCell>
               {gamesData.map((game, index) => (
                 <TableCell align="right" key={index}>

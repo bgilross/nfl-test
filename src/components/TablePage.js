@@ -8,62 +8,61 @@ const TablePage = ({ gameIDs, playerList, setPlayerList }) => {
   const [allData, setAllData] = useState([])
   const [loading, setLoading] = useState(true)
   const [playersStats, setPlayersStats] = useState([])
-  const [gameResults, setGameResults] = useState([])
+
+  const cache = {}
 
   const apiUrl = `https://cdn.espn.com/core/nfl/boxscore?xhr=1&gameId=`
   let numWeeks = 4
+
   const fetchAllGameData = async () => {
+    console.log('starting fetchAllGameData')
     setLoading(true)
+    let cachedResponses = []
+    let gameDataPromises = []
+
+    gameIDs.forEach((gameID) => {
+      if (cache[gameID]) {
+        console.log(`Using Cached data for gameID: ${gameID}`)
+        cachedResponses.push(cache[gameID])
+      } else {
+        console.log(`Fetching new data for gameID:  `, gameID)
+        gameDataPromises.push(
+          axios.get(`${apiUrl}${gameID}`).then((response) => {
+            cache[gameID] = response
+            return response
+          })
+        )
+      }
+    })
+
     try {
-      const gameDataPromises = gameIDs.map((gameID) =>
-        axios.get(`${apiUrl}${gameID}`)
-      )
       const responses = await Promise.all(gameDataPromises)
-      setAllData(responses)
+
+      const allResponses = [...cachedResponses, ...responses]
+      console.log('All responses from fetchAllGameData: ', allResponses)
+      setAllData(allResponses)
     } catch (err) {
       console.log(err)
     } finally {
       setLoading(false)
     }
-  }
-
-  const extractGameInfo = (header) => {
-    const weekNumber = header.week
-    const competition = header.competitions[0]
-    const gameDate = competition.date
-
-    const teams = competition.competitors.map((team) => {
-      return {
-        teamName: team.team.displayName,
-        homeAway: team.homeAway,
-        score: team.score,
-        winner: team.winner ? 'W' : 'L',
-        abbreviation: team.team.abbreviation,
-      }
-    })
-
-    const homeTeam = teams.find((team) => team.homeAway === 'home')
-    const awayTeam = teams.find((team) => team.homeAway === 'away')
-
-    return {
-      week: weekNumber,
-      date: gameDate,
-      homeTeam: {
-        name: homeTeam.teamName,
-        score: homeTeam.score,
-        result: homeTeam.winner,
-        abbreviation: homeTeam.abbreviation,
-      },
-      awayTeam: {
-        name: awayTeam.teamName,
-        score: awayTeam.score,
-        result: awayTeam.winner,
-        abbreviation: awayTeam.abbreviation,
-      },
-    }
+    // try {
+    //   const gameDataPromises = gameIDs.map((gameID) =>
+    //     axios.get(`${apiUrl}${gameID}`)
+    //   )
+    //   const responses = await Promise.all(gameDataPromises)
+    //   console.log('Responses from fetch all data: ', responses)
+    //   setAllData(responses)
+    // } catch (err) {
+    //   console.log(err)
+    // } finally {
+    //   setLoading(false)
+    // }
   }
 
   const createData = () => {
+    console.log('Starting Create Data')
+    console.log('All Data: ', allData)
     let tempPlayersStats = []
     let tempGamesData = []
     //loop through each player on the player list
@@ -145,27 +144,35 @@ const TablePage = ({ gameIDs, playerList, setPlayerList }) => {
   }
 
   useEffect(() => {
-    fetchAllGameData()
+    if (gameIDs.length > 0) {
+      fetchAllGameData()
+    }
   }, [gameIDs])
 
   useEffect(() => {
-    if (allData.length > 0) {
+    if (allData.length > 0 && playerList.length > 0) {
       createData()
     }
   }, [allData, playerList])
 
+  const handleCheck = () => {}
+  if (playersStats.length < 1) {
+    return <div>No Players</div>
+  }
   if (loading) {
     return <div>Loading...</div>
   }
 
   return (
     <GridBox>
-      {playersStats.map((player, i) => (
-        <Grid size={{ xs: 12, sm: 6, lg: 4, xl: 3 }}>
+      {/* <button onClick={handleCheck}>Check</button> */}
+      {playersStats?.map((player, i) => (
+        <Grid key={i} size={{ xs: 12, sm: 6, lg: 4, xl: 3 }}>
           <PlayerTable
             key={i}
             player={player}
             setPlayerList={setPlayerList}
+            setPlayersStats={setPlayersStats}
             allData={allData}
           />
         </Grid>

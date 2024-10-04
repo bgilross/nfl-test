@@ -27,9 +27,9 @@ const TeamStatsDisplay = ({ teamName }) => {
   const teamCategories = teamData?.splits?.categories
 
   return (
-    <Grid size={{ xs: 12, sm: 6, lg: 4, xl: 3 }}>
+    <div>
       <PaperContainer>
-        <h2>Team1: {teamData.team_name}</h2>
+        <h2>Team1: {teamData?.team_name}</h2>
         {teamCategories?.map((category, catIndex) => {
           const categoryName = category.name
           if (!searchTerms.search.categories[categoryName]) {
@@ -59,7 +59,7 @@ const TeamStatsDisplay = ({ teamName }) => {
           )
         })}
       </PaperContainer>
-    </Grid>
+    </div>
   )
 }
 export default TeamStatsDisplay
