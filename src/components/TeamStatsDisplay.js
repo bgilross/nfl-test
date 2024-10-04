@@ -1,8 +1,32 @@
-const TeamStatsDisply = () => {
+import stats from '../data/modified_data_with_team_names.json'
+
+const TeamStatsDisplay = ({ teamName }) => {
+  const teamData = stats.find((team) =>
+    team.team_name.toLowerCase().includes(teamName.toLowerCase())
+  )
+
+  const searchTerms = {
+    search: {
+      categories: {
+        passing: [
+          'completionPct',
+          'ESPNQBRating',
+          'QBRating',
+          'netPassingYardsPerGame',
+        ],
+        receiving: ['ESPNWRRating', 'receivingYardsAfterCatch'],
+        rushing: ['rushingYardsPerGame', 'longRushing'],
+        defensive: [],
+      },
+    },
+  }
+
+  const teamCategories = teamData?.splits?.categories
+
   return (
     <div>
-      <h2>Team1: {team1Data.team_name}</h2>
-      {team1Categories?.map((category, catIndex) => {
+      <h2>Team1: {teamData.team_name}</h2>
+      {teamCategories?.map((category, catIndex) => {
         const categoryName = category.name
         if (!searchTerms.search.categories[categoryName]) {
           return null
@@ -33,4 +57,4 @@ const TeamStatsDisply = () => {
     </div>
   )
 }
-export default TeamStatsDisply
+export default TeamStatsDisplay
