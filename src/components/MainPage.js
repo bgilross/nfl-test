@@ -5,13 +5,38 @@ import TeamStats from './TeamStats'
 import PaperContainer from './PaperContainer'
 import GridBox from './GridBox'
 import Grid from '@mui/material/Grid2'
+import TeamRankings from './TeamRankings'
 
 const MainPage = () => {
-  const [teamName1, setTeamName1] = useState('Bills')
-  const [teamName2, setTeamName2] = useState('Texans')
+  const [teamName1, setTeamName1] = useState('Panthers')
+  const [teamName2, setTeamName2] = useState('Bears')
   const [gameIds, setGameIds] = useState([])
   const [playerList, setPlayerList] = useState([])
   const [playerName, setPlayerName] = useState('James Cook')
+
+  function getFootballWeek() {
+    const startDate = new Date('2024-09-05')
+
+    const currentDate = new Date()
+
+    const differenceInTime = currentDate - startDate
+
+    const differenceInDays = Math.floor(
+      differenceInTime / (1000 * 60 * 60 * 24)
+    )
+
+    const currentWeek = Math.ceil(differenceInDays / 7)
+
+    if (currentWeek < 1) {
+      return "Season hasn't started yet"
+    } else if (currentWeek > 17) {
+      return 'Season has ended'
+    } else {
+      return currentWeek
+    }
+  }
+
+  const currentWeek = getFootballWeek()
 
   const handleTeam1TextChange = (e) => {
     setTeamName1(e.target.value)
@@ -56,8 +81,15 @@ const MainPage = () => {
 
   return (
     <GridBox>
-      <Grid size={8} className="LeftSide">
-        <PaperContainer>
+      {/* <button
+        onClick={() => {
+          console.log(currentWeek)
+        }}
+      >
+        Week
+      </button> */}
+      <Grid size={8}>
+        <PaperContainer style={{ width: 'full' }}>
           <input
             type="text"
             value={teamName1}
@@ -78,7 +110,12 @@ const MainPage = () => {
             <button onClick={handleAddPlayer}>Add Player</button>
           </div>
         </PaperContainer>
+        <div>
+          <TeamRankings team1Name={teamName1} team2Name={teamName2} />
+        </div>
+      </Grid>
 
+      <Grid size={8} className="LeftSide">
         <div style={{ padding: '4px' }}>
           <TablePage
             playerList={playerList}
