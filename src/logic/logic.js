@@ -1,5 +1,6 @@
 import teamLegend from '../data/team_legend.json'
 import axios from 'axios'
+import teamRankings from '../data/teamrankings_stats.json'
 
 // const cache = {}
 
@@ -16,6 +17,19 @@ export const getWeek = () => {
   } else {
     return currentWeek
   }
+}
+
+export const getTeamRankings = (teamLocation) => {
+  let stats = {}
+  for (const category in teamRankings) {
+    const teamData = teamRankings[category].find(
+      (team) => team.Team === teamLocation
+    )
+    if (teamData) {
+      stats[category] = teamData
+    }
+  }
+  return stats
 }
 
 const week = getWeek()
@@ -78,9 +92,17 @@ export const getNextOpp = async (teamName) => {
 }
 
 export const getTeamStatData = async (teamName) => {
-  let allStats = { team: teamName, gamesData: [], categories: {} }
+  let allStats = { team: teamName, location: '', gamesData: [], categories: {} }
   const gameData = await getPrevGameData(teamName)
-
+  gameData[0].data.gamepackageJSON.header.competitions[0].competitors.forEach(
+    (team) => {
+      if (
+        team.team.displayName.toLowerCase().includes(teamName.toLowerCase())
+      ) {
+        allStats.location = team.team.location
+      }
+    }
+  )
   if (!gameData || !Array.isArray(gameData)) {
     console.error('No valid game data found.')
     return allStats // Return empty stats if no valid data
