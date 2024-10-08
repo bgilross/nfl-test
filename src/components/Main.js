@@ -4,6 +4,7 @@ import GridBox from './GridBox'
 import Grid from '@mui/material/Grid2'
 import { useDataContext } from '../context/dataContext'
 import TeamsStatsDisplay from './TeamStatsDisplay'
+import TeamTable from './TeamTable'
 
 const Main = () => {
   const { teamName, setTeamName, opp, currentData, handleGetAllData } =
@@ -35,6 +36,7 @@ const Main = () => {
         </button>
       </div>
       <TeamsStatsDisplay currentData={currentData} />
+      <TeamTable data={currentData} />
     </div>
   )
 }

@@ -57,6 +57,7 @@ export const getNextGameID = async (teamName) => {
     const response = await axios.get(apiUrl)
 
     const nextEventID = response.data.team.nextEvent[0].id
+    console.log('Next event ID:', nextEventID)
     return nextEventID
   } catch (error) {
     console.error('Error fetching data:', error)
@@ -155,7 +156,7 @@ export const getTeamStatData = async (teamName) => {
                   ) {
                     allStats.categories[statCategory.name][
                       player.athlete.displayName
-                    ][description] = []
+                    ][description] = Array(week).fill(0)
                   }
                   allStats.categories[statCategory.name][
                     player.athlete.displayName
@@ -253,7 +254,7 @@ const getAllTeamsGameIds = async (teamName) => {
   const currentWeek = getWeek()
 
   // Iterate through the weeks and fetch game IDs
-  for (let week = 1; week <= currentWeek - 1; week++) {
+  for (let week = 1; week <= currentWeek; week++) {
     const gameId = await getTeamsGameIdByWeek(teamName, week)
     console.log('GetTeamsGamesIdByWeek: gameId: ', gameId) // Debugging output
     gameIds.push(gameId)
