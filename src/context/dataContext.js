@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect, createContext } from 'react'
-import axios from 'axios'
+import axios, { all } from 'axios'
 import { getWeek, getNextOpp, getTeamStatData } from '../logic/logic'
+import teamLegend from '../data/team_legend.json'
 
 export const DataContext = createContext()
 
@@ -10,17 +11,20 @@ export const DataProvider = ({ children }) => {
   const [opp, setOpp] = useState('')
 
   const cache = {}
-  const week = getWeek()
 
   const handleGetAllData = async () => {
     if (teamName) {
-      const tempOpp = await getNextOpp()
+      const tempOpp = await getNextOpp(teamName)
       console.log('Opp is : ', tempOpp)
       setOpp(tempOpp)
-      currentData.team1 = await getTeamStatData(teamName)
-      // currentData.team2 = await getTeamStatData(opp)}
+
+      const [team1Data, team2Data] = await Promise.all([
+        getTeamStatData(teamName),
+        getTeamStatData(tempOpp),
+      ])
+
+      setCurrentData({ team1: team1Data, team2: team2Data })
     }
-    console.log('no team name ')
   }
 
   return (

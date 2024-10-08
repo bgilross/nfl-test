@@ -5,15 +5,10 @@ import axios from 'axios'
 
 export const getWeek = () => {
   const startDate = new Date('2024-09-05')
-
   const currentDate = new Date()
-
   const differenceInTime = currentDate - startDate
-
   const differenceInDays = Math.floor(differenceInTime / (1000 * 60 * 60 * 24))
-
   const currentWeek = Math.ceil(differenceInDays / 7)
-
   if (currentWeek < 1) {
     return "Season hasn't started yet"
   } else if (currentWeek > 17) {
@@ -23,7 +18,9 @@ export const getWeek = () => {
   }
 }
 
-export const getTeamID = (teamName) => {
+const week = getWeek()
+
+const getTeamID = (teamName) => {
   for (const [id, name] of Object.entries(teamLegend)) {
     if (name.toLowerCase().includes(teamName?.toLowerCase())) {
       return id
@@ -35,30 +32,42 @@ export const getTeamID = (teamName) => {
 
 export const getNextGameID = async (teamName) => {
   const teamID = getTeamID(teamName)
+
+  if (!teamID) {
+    console.error('Error: getTeamID returned null')
+    return null
+  }
   const apiUrl = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${teamID}`
+
   try {
     const response = await axios.get(apiUrl)
+
     const nextEventID = response.data.team.nextEvent[0].id
     return nextEventID
-  } catch (err) {
-    console.log(`Error fetching data for ${teamName} ID: ${teamID}`, err)
+  } catch (error) {
+    console.error('Error fetching data:', error)
+    return null
   }
 }
 
 export const getNextOpp = async (teamName) => {
   const nextGameID = await getNextGameID(teamName)
+  if (!nextGameID) {
+    return null
+  }
   const apiUrl = `https://cdn.espn.com/core/nfl/game?xhr=1&gameId=${nextGameID}`
   try {
     const response = await axios.get(apiUrl)
     const team1 =
       response.data.gamepackageJSON.boxscore.teams[0].team.displayName
+
     const team2 =
       response.data.gamepackageJSON.boxscore.teams[1].team.displayName
 
     if (team1.toLowerCase().includes(teamName.toLowerCase())) {
-      return team1
-    } else if (team2.toLowerCase().includes(teamName.toLowerCase())) {
       return team2
+    } else if (team2.toLowerCase().includes(teamName.toLowerCase())) {
+      return team1
     } else {
       return null
     }
@@ -69,92 +78,96 @@ export const getNextOpp = async (teamName) => {
 }
 
 export const getTeamStatData = async (teamName) => {
-  let allStats = { team: teamName, gamesData: [], categories: {} };
-  const gameData = await getPrevGameData(teamName);
-  
+  let allStats = { team: teamName, gamesData: [], categories: {} }
+  const gameData = await getPrevGameData(teamName)
+
   if (!gameData || !Array.isArray(gameData)) {
-    console.error("No valid game data found.");
-    return allStats; // Return empty stats if no valid data
+    console.error('No valid game data found.')
+    return allStats // Return empty stats if no valid data
   }
-  
-  gameData.forEach((game) => {
+
+  for (const game of gameData) {
     if (game.data && game.data.gamepackageJSON) {
-      const boxScore = game.data.gamepackageJSON.boxscore.players;
-      const header = game.data.gamepackageJSON.header;
+      const boxScore = game.data.gamepackageJSON.boxscore.players
+      const header = game.data.gamepackageJSON.header
 
-    const homeTeam = header.competitions[0].competitors.find(
-      (team) => team.homeAway === 'home'
-    )
-    const awayTeam = header.competitions[0].competitors.find(
-      (team) => team.homeAway === 'away'
-    )
+      const homeTeam = header.competitions[0].competitors.find(
+        (team) => team.homeAway === 'home'
+      )
+      const awayTeam = header.competitions[0].competitors.find(
+        (team) => team.homeAway === 'away'
+      )
 
-    boxScore.foreEach((team) => {
-      if (
-        team.team.displayName.toLowerCase().includes(teamName.toLowerCase())
-      ) {
-        team.statistics.forEach((statCategory) => {
-          if (
-            ['passing', 'rushing', 'receiving', 'defensive'].includes(
-              statCategory.name.toLowerCase()
-            )
-          ) {
-            const weekIndex = header.week - 1
-            if (!allStats.categories[statCategory.name]) {
-              allStats.categories[statCategory.name] = {}
-            }
-
-            statCategory.athletes.forEach((player) => {
-              if (
-                !allStats.categories[statCategory.name][
-                  player.athlete.displayName
-                ]
-              ) {
-                allStats.categories[statCategory.name][
-                  player.athlete.displayName
-                ] = {}
+      for (const team of boxScore) {
+        if (
+          team.team.displayName.toLowerCase().includes(teamName.toLowerCase())
+        ) {
+          for (const statCategory of team.statistics) {
+            if (
+              ['passing', 'rushing', 'receiving', 'defensive'].includes(
+                statCategory.name.toLowerCase()
+              )
+            ) {
+              const weekIndex = header.week - 1
+              if (!allStats.categories[statCategory.name]) {
+                allStats.categories[statCategory.name] = {}
               }
-              player.stats.forEach((stat, i) => {
-                const description = statCategory.descriptions[i]
+
+              for (const player of statCategory.athletes) {
                 if (
                   !allStats.categories[statCategory.name][
                     player.athlete.displayName
-                  ][description]
+                  ]
                 ) {
                   allStats.categories[statCategory.name][
                     player.athlete.displayName
-                  ][description] = []
+                  ] = {}
                 }
-                allStats.categories[statCategory.name][
-                  player.athlete.displayName
-                ][description][weekIndex] = stat
-              })
-            })
+                for (const [i, stat] of player.stats.entries()) {
+                  const description = statCategory.descriptions[i]
+
+                  if (
+                    !allStats.categories[statCategory.name][
+                      player.athlete.displayName
+                    ][description]
+                  ) {
+                    allStats.categories[statCategory.name][
+                      player.athlete.displayName
+                    ][description] = []
+                  }
+                  allStats.categories[statCategory.name][
+                    player.athlete.displayName
+                  ][description][weekIndex] = stat
+                }
+              }
+            }
           }
-        })
+        }
       }
-    })
-    allStats.gamesData.push({
-      week: header.week,
-      date: header.competitions[0].date,
-      homeTeam: {
-        name: homeTeam.team.displayName,
-        abbreviation: homeTeam.team.abbreviation,
-        score: homeTeam.score,
-        result: homeTeam.winner ? 'W' : 'L',
-      },
-      awayTeam: {
-        name: awayTeam.team.displayName,
-        abbreviation: awayTeam.team.abbreviation,
-        score: awayTeam.score,
-        result: awayTeam.winner ? 'W' : 'L',
-      },
-      
-    })
-  })
+      allStats.gamesData.push({
+        week: header.week,
+        date: header.competitions[0].date,
+        homeTeam: {
+          name: homeTeam.team.displayName,
+          abbreviation: homeTeam.team.abbreviation,
+          score: homeTeam.score,
+          result: homeTeam.winner ? 'W' : 'L',
+        },
+        awayTeam: {
+          name: awayTeam.team.displayName,
+          abbreviation: awayTeam.team.abbreviation,
+          score: awayTeam.score,
+          result: awayTeam.winner ? 'W' : 'L',
+        },
+      })
+    }
+  }
+
+  console.log('finishing ...', allStats)
+  return allStats
 }
 
-export const getPrevGameData = async (teamName) => {
+const getPrevGameData = async (teamName) => {
   const apiUrl = `https://cdn.espn.com/core/nfl/boxscore?xhr=1&gameId=`
   let gameDataPromises = []
   const gameIds = await getAllTeamsGameIds(teamName)

@@ -1,6 +1,6 @@
-import stats from '../data/modified_data_with_team_names.json'
+import stats from '../../data/modified_data_with_team_names.json'
 import Grid from '@mui/material/Grid2'
-import PaperContainer from './PaperContainer'
+import PaperContainer from '../PaperContainer'
 
 const TeamStatsDisplay = ({ teamName }) => {
   const teamData = stats.find((team) =>

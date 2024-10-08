@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
-import TablePage from './TablePage'
-import TeamStats from './TeamStats'
-import PaperContainer from './PaperContainer'
-import GridBox from './GridBox'
+import TablePage from '../TablePage'
+import TeamStats from '../TeamStats'
+import PaperContainer from '../PaperContainer'
+import GridBox from '../GridBox'
 import Grid from '@mui/material/Grid2'
-import TeamRankings from './TeamRankings'
+import TeamRankings from '../TeamRankings'
 
 const MainPage = () => {
   const [teamName1, setTeamName1] = useState('Panthers')
