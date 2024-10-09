@@ -9,8 +9,11 @@ import Paper from '@mui/material/Paper'
 import { useState } from 'react'
 
 const TeamTable = ({ data }) => {
-  const [currentCategory, setCurrentCategory] = useState('')
-  const [currentStat, setCurrentStat] = useState('')
+  const [currentCategory, setCurrentCategory] = useState('offensive')
+  const [currentStat, setCurrentStat] = useState('Yards')
+  const [currentType, setCurrentType] = useState('rushing')
+  const [defStat, setDefStat] = useState('Tackles')
+  const [addStat, setAddStat] = useState('attempts')
   const gamesData = data.team1.gamesData
   const categories = data.team1.categories
   const numWeeks = gamesData?.length
@@ -48,18 +51,52 @@ const TeamTable = ({ data }) => {
         onChange={({ target: { value } }) => setCurrentCategory(value)}
       >
         <option value="">Select a Category</option>
-        {Object.keys(categories).map((category) => (
+        {/* {Object.keys(categories).map((category) => (
           <option key={category} value={category}>
             {category}
           </option>
-        ))}
+        ))} */}
+        <option value="offensive">Offensive</option>
+        <option value="defensive">Defensive</option>
       </select>
 
-      {currentCategory && (
+      {currentCategory && currentCategory !== 'defensive' && (
+        <select
+          value={currentType}
+          onChange={(e) => setCurrentType(e.target.value)}
+        >
+          <option value="">Select a stat</option>
+          {Object.keys(categories).map((category) => {
+            if (category !== 'defensive') {
+              return (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              )
+            }
+          })}
+        </select>
+      )}
+
+      {currentCategory === 'offensive' && (
         <select
           value={currentStat}
           onChange={(e) => setCurrentStat(e.target.value)}
         >
+          <option value="">Select a stat</option>
+          {Object.keys(categories[currentType]).length > 0 &&
+            Object.keys(Object.values(categories[currentType])[0]).map(
+              (stat) => (
+                <option key={stat} value={stat}>
+                  {stat}
+                </option>
+              )
+            )}
+        </select>
+      )}
+
+      {currentCategory === 'defensive' && (
+        <select value={defStat} onChange={(e) => setDefStat(e.target.value)}>
           <option value="">Select a stat</option>
           {Object.keys(categories[currentCategory]).length > 0 &&
             Object.keys(Object.values(categories[currentCategory])[0]).map(
@@ -81,68 +118,97 @@ const TeamTable = ({ data }) => {
               </TableCell>
               <TableCell>
                 <div>Stat</div>
-                <div>{currentStat}</div>
+                <div>
+                  {currentCategory === 'defensive' ? defStat : currentStat}
+                </div>
               </TableCell>
               {weeklyScores}
             </TableRow>
           </TableHead>
           <TableBody>
-            {Object.entries(categories).map(([categoryName, players]) => (
-              <React.Fragment key={categoryName}>
-                <TableRow>
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    colSpan={numWeeks + 1}
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <div>
-                        <div>{categoryName.toUpperCase()}</div>
-                        <button
-                          onClick={() => {
-                            console.log(
-                              Object.entries(players).map(
-                                (player, stat) => stat
-                              )
-                            )
+            {Object.entries(categories).map(([categoryName, players]) => {
+              if (
+                currentCategory === 'defensive' &&
+                categoryName !== 'defensive'
+              ) {
+                return null
+              } else if (
+                currentCategory !== 'defensive' &&
+                categoryName === 'defensive'
+              ) {
+                return null
+              } else {
+                return (
+                  <React.Fragment key={categoryName}>
+                    <TableRow>
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        colSpan={numWeeks + 1}
+                        style={{ fontWeight: 'bold' }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
                           }}
                         >
-                          Check
-                        </button>
-                      </div>
-                      {currentStat && <div>{currentStat}</div>}
-                    </div>
-                  </TableCell>
-                </TableRow>
-
-                {Object.entries(players).map(([playerName, playerStats]) => (
-                  <TableRow key={playerName}>
-                    <TableCell>
-                      {playerName}{' '}
-                      <button
-                        onClick={() => {
-                          console.log(playerStats)
-                        }}
-                      >
-                        Check
-                      </button>
-                    </TableCell>
-                    <TableCell> = </TableCell>
-                    {playerStats[currentStat]?.map((stat, index) => (
-                      <TableCell align="right" key={index}>
-                        {stat}
+                          <div>
+                            <div>{categoryName.toUpperCase()}</div>
+                            <button
+                              onClick={() => {
+                                console.log(
+                                  Object.entries(players).map(
+                                    (player, stat) => stat
+                                  )
+                                )
+                              }}
+                            >
+                              Check
+                            </button>
+                          </div>
+                          <div>
+                            {categoryName === 'defensive'
+                              ? defStat
+                              : currentStat}{' '}
+                          </div>
+                        </div>
                       </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </React.Fragment>
-            ))}
+                    </TableRow>
+
+                    {Object.entries(players).map(
+                      ([playerName, playerStats]) => (
+                        <TableRow key={playerName}>
+                          <TableCell>
+                            {playerName}{' '}
+                            <button
+                              onClick={() => {
+                                console.log(playerStats)
+                              }}
+                            >
+                              Check
+                            </button>
+                          </TableCell>
+                          <TableCell> = </TableCell>
+                          {currentCategory === 'defensive' &&
+                            playerStats[defStat]?.map((stat, index) => (
+                              <TableCell align="right" key={index}>
+                                {stat}
+                              </TableCell>
+                            ))}
+                          {currentCategory !== 'defensive' &&
+                            playerStats[currentStat]?.map((stat, index) => (
+                              <TableCell align="right" key={index}>
+                                {stat}
+                              </TableCell>
+                            ))}
+                        </TableRow>
+                      )
+                    )}
+                  </React.Fragment>
+                )
+              }
+            })}
           </TableBody>
         </Table>
       </TableContainer>
