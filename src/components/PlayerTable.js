@@ -9,10 +9,19 @@ import Paper from '@mui/material/Paper'
 import { DataContext, useDataContext } from '../context/dataContext'
 
 const PlayerTable = ({ playerName }) => {
-  const { allData } = useDataContext()
-  const gamesData = allData.team1.gamesData
-  const categories = allData.team1.categories
+  console.log(`Player Table mounting: ${playerName}`)
 
+  const { currentData } = useDataContext()
+  const { gamesData, categories } = currentData.team1
+  const numWeeks = gamesData?.length
+  console.log('currentData:', JSON.stringify(currentData, null, 2))
+  console.log(
+    `Player Table initialized: currentData: ${currentData}`,
+    playerName
+  )
+  if (!currentData || !gamesData || !categories) {
+    return <div> Loading</div>
+  }
   return (
     <div
       style={{
@@ -25,7 +34,7 @@ const PlayerTable = ({ playerName }) => {
             <TableRow>
               <TableCell>
                 <div>STATISTIC</div>
-                <div>{player.name}</div>
+                <div>{playerName}</div>
               </TableCell>
               {gamesData.map((game, index) => (
                 <TableCell align="right" key={index}>
@@ -40,41 +49,36 @@ const PlayerTable = ({ playerName }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {Object.entries(categories).map(([categoryName, stats]) => (
-              <React.Fragment key={categoryName}>
-                {/* Display the category name (e.g., Rushing, Receiving) */}
-                <TableRow>
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    colSpan={numWeeks + 1}
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    {categoryName.toUpperCase()}
-                  </TableCell>
-                </TableRow>
-
-                {/* Loop over each stat description (e.g., Yards, Touchdowns) */}
-                {Object.keys(players).map((description) => (
-                  <TableRow key={description}>
-                    <TableCell component="th" scope="row">
-                      {description}
+            {Object.entries(categories).map(([categoryName, players]) =>
+              players[playerName] ? (
+                <React.Fragment key={categoryName}>
+                  {/* Display the category name (e.g., Rushing, Receiving) */}
+                  <TableRow>
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      colSpan={numWeeks + 1}
+                      style={{ fontWeight: 'bold' }}
+                    >
+                      {categoryName.toUpperCase()}
                     </TableCell>
-                    {/* Render the stat values for each week */}
-                    {stats[description].map((statValue, i) => (
-                      <TableCell
-                        style={{ paddingRight: '4px' }}
-                        sx={{ borderRight: '1px solid black' }}
-                        align="right"
-                        key={i}
-                      >
-                        {statValue !== null ? `${statValue}` : '-'}
-                      </TableCell>
-                    ))}
                   </TableRow>
-                ))}
-              </React.Fragment>
-            ))}
+                  {Object.entries(players[playerName]).map(
+                    ([statName, values]) => {
+                      return (
+                        <TableRow key={statName}>
+                          <TableCell>{statName}</TableCell>
+                          <TableCell> = </TableCell>
+                          {values.map((value, index) => (
+                            <TableCell key={index}>{value}</TableCell>
+                          ))}
+                        </TableRow>
+                      )
+                    }
+                  )}
+                </React.Fragment>
+              ) : null
+            )}
           </TableBody>
         </Table>
       </TableContainer>

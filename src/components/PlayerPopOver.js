@@ -4,9 +4,9 @@ import Typography from '@mui/material/Typography'
 import TeamStatsDisplay from './TeamStatsDisplay'
 import TeamStats from './TeamStats'
 import { DataContext, useDataContext } from '../context/dataContext'
-import PlayerTable from './prevComponents/PlayerTable'
+import PlayerTable from './PlayerTable'
 
-export default function TeamRankingsPopOver({ children, game }) {
+const PlayerPopOver = ({ children, gamesData, playerName }) => {
   const [anchorEl, setAnchorEl] = React.useState(null)
 
   const { currentTeam } = useDataContext()
@@ -20,9 +20,6 @@ export default function TeamRankingsPopOver({ children, game }) {
   }
 
   const open = Boolean(anchorEl)
-  const data = game.awayTeam.name.includes(currentTeam)
-    ? game.awayTeam
-    : game.homeTeam
 
   return (
     <div>
@@ -50,10 +47,12 @@ export default function TeamRankingsPopOver({ children, game }) {
         onClose={handlePopoverClose}
         disableRestoreFocus
       >
-        <Typography sx={{ p: 1 }}>
-          <PlayerTable />
-        </Typography>
+        {/* <Typography sx={{ p: 1 }}> */}
+        <PlayerTable playerName={playerName} />
+        {/* </Typography> */}
       </Popover>
     </div>
   )
 }
+
+export default PlayerPopOver

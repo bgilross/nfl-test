@@ -9,7 +9,8 @@ import Paper from '@mui/material/Paper'
 import Popover from '@mui/material/Popover'
 import { useState } from 'react'
 import TeamRankingsPopOver from './TeamRankingsPopOver'
-import PlayerStatsPopOver from './PlayerStatsPopOver'
+
+import PlayerPopOver from './PlayerPopOver'
 const TeamTable = ({ data }) => {
   const [currentCategory, setCurrentCategory] = useState('offensive')
   const [currentStat, setCurrentStat] = useState('Yards')
@@ -183,16 +184,12 @@ const TeamTable = ({ data }) => {
                     {Object.entries(players).map(
                       ([playerName, playerStats]) => (
                         <TableRow key={playerName}>
-                          <TableCell>
-                            {playerName}{' '}
-                            <button
-                              onClick={() => {
-                                console.log(playerStats)
-                              }}
-                            >
-                              Check
-                            </button>
-                          </TableCell>
+                          <PlayerPopOver
+                            gamesData={gamesData}
+                            playerName={playerName}
+                          >
+                            <TableCell>{playerName} </TableCell>
+                          </PlayerPopOver>
                           <TableCell> = </TableCell>
                           {currentCategory === 'defensive' &&
                             playerStats[defStat]?.map((stat, index) => (
