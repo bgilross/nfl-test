@@ -19,7 +19,7 @@ export default function TeamRankingsPopOver({ children, game }) {
   }
 
   const open = Boolean(anchorEl)
-  const data = game.awayTeam.name.includes(currentTeam)
+  const data = game?.awayTeam?.name.includes(currentTeam)
     ? game.awayTeam
     : game.homeTeam
 

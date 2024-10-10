@@ -9,7 +9,7 @@ import Paper from '@mui/material/Paper'
 import Popover from '@mui/material/Popover'
 import { useState } from 'react'
 import TeamRankingsPopOver from './TeamRankingsPopOver'
-
+import PlayerStatsPopOver from './PlayerStatsPopOver'
 const TeamTable = ({ data }) => {
   const [currentCategory, setCurrentCategory] = useState('offensive')
   const [currentStat, setCurrentStat] = useState('Yards')
