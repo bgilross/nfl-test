@@ -6,7 +6,9 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
+import Popover from '@mui/material/Popover'
 import { useState } from 'react'
+import TeamRankingsPopOver from './TeamRankingsPopOver'
 
 const TeamTable = ({ data }) => {
   const [currentCategory, setCurrentCategory] = useState('offensive')
@@ -20,12 +22,14 @@ const TeamTable = ({ data }) => {
 
   const weeklyScores = gamesData?.map((game, index) => (
     <TableCell align="right" key={index}>
-      <div>W{index + 1}</div>
-      <div>{game.awayTeam.abbreviation}</div>
-      <div>@</div>
-      <div>{game.homeTeam.abbreviation}</div>
-      <div>{game.awayTeam.score}</div>
-      <div>{game.homeTeam.score}</div>
+      <TeamRankingsPopOver game={game}>
+        <div>W{index + 1}</div>
+        <div>{game.awayTeam.abbreviation}</div>
+        <div>@</div>
+        <div>{game.homeTeam.abbreviation}</div>
+        <div>{game.awayTeam.score}</div>
+        <div>{game.homeTeam.score}</div>
+      </TeamRankingsPopOver>
     </TableCell>
   ))
 
