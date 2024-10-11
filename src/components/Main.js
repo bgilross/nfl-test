@@ -36,7 +36,9 @@ const Main = () => {
         </button>
       </div>
       <TeamsStatsDisplay currentData={currentData} />
-      <TeamTable data={currentData} />
+      <div style={{ width: '70%', padding: '10px', margin: '10px' }}>
+        <TeamTable data={currentData} />
+      </div>
     </div>
   )
 }

@@ -9,16 +9,10 @@ import Paper from '@mui/material/Paper'
 import { DataContext, useDataContext } from '../context/dataContext'
 
 const PlayerTable = ({ playerName }) => {
-  console.log(`Player Table mounting: ${playerName}`)
-
   const { currentData } = useDataContext()
   const { gamesData, categories } = currentData.team1
   const numWeeks = gamesData?.length
-  console.log('currentData:', JSON.stringify(currentData, null, 2))
-  console.log(
-    `Player Table initialized: currentData: ${currentData}`,
-    playerName
-  )
+
   if (!currentData || !gamesData || !categories) {
     return <div> Loading</div>
   }

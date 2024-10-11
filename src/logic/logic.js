@@ -182,7 +182,7 @@ export const getTeamStatData = async (teamName) => {
           abbreviation: awayTeam.team.abbreviation,
           score: awayTeam.score,
           result: awayTeam.winner ? 'W' : 'L',
-          location: homeTeam.team.location,
+          location: awayTeam.team.location,
         },
       })
     }

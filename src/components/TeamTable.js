@@ -115,7 +115,7 @@ const TeamTable = ({ data }) => {
       )}
 
       <TableContainer component={Paper} elevation={7}>
-        <Table padding="none" size="small" aria-label="simple table">
+        <Table padding="1" size="small" aria-label="simple table">
           <TableHead>
             <TableRow>
               <TableCell>
@@ -149,7 +149,7 @@ const TeamTable = ({ data }) => {
                       <TableCell
                         component="th"
                         scope="row"
-                        colSpan={numWeeks + 1}
+                        colSpan={numWeeks + 2}
                         style={{ fontWeight: 'bold' }}
                       >
                         <div

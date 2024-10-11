@@ -8,7 +8,7 @@ import { DataContext, useDataContext } from '../context/dataContext'
 export default function TeamRankingsPopOver({ children, game }) {
   const [anchorEl, setAnchorEl] = React.useState(null)
 
-  const { currentTeam } = useDataContext()
+  const { teamName } = useDataContext()
 
   const handlePopoverOpen = (event) => {
     setAnchorEl(event.currentTarget)
@@ -17,11 +17,14 @@ export default function TeamRankingsPopOver({ children, game }) {
   const handlePopoverClose = () => {
     setAnchorEl(null)
   }
-
+  console.log('current Team: ', teamName)
   const open = Boolean(anchorEl)
-  const data = game?.awayTeam?.name.includes(currentTeam)
-    ? game.awayTeam
-    : game.homeTeam
+  const data = game?.awayTeam?.name.includes(teamName)
+    ? game.homeTeam
+    : game.awayTeam
+
+  console.log('Popver passing: data: ', data)
+  console.log('Popover game: ', game)
 
   return (
     <div>
