@@ -1,7 +1,8 @@
 import { getTeamRankings } from '../logic/logic'
 
 const TeamStats = ({ data }) => {
-  const stats = getTeamRankings(data.location)
+  console.log('TeamStats: data: ', data)
+  const stats = getTeamRankings(data)
 
   return (
     <div>

@@ -19,11 +19,11 @@ export const getWeek = () => {
   }
 }
 
-export const getTeamRankings = (teamLocation) => {
+export const getTeamRankings = (teamObj) => {
   let stats = {}
   for (const category in teamRankings) {
     const teamData = teamRankings[category].find(
-      (team) => team.Team === teamLocation
+      (team) => team.Team === teamObj.location
     )
     if (teamData) {
       stats[category] = teamData
@@ -93,8 +93,11 @@ export const getNextOpp = async (teamName) => {
 }
 
 export const getTeamStatData = async (teamName) => {
+  console.log('Running getTeamStatData: teamName: ', teamName)
   let allStats = { team: teamName, location: '', gamesData: [], categories: {} }
   const gameData = await getPrevGameData(teamName)
+
+  console.log('Game data: ', gameData)
   gameData[0].data.gamepackageJSON.header.competitions[0].competitors.forEach(
     (team) => {
       if (
@@ -110,6 +113,7 @@ export const getTeamStatData = async (teamName) => {
   }
 
   for (const game of gameData) {
+    console.log('Game: ', game)
     if (game.data && game.data.gamepackageJSON) {
       const boxScore = game.data.gamepackageJSON.boxscore.players
       const header = game.data.gamepackageJSON.header
@@ -120,47 +124,48 @@ export const getTeamStatData = async (teamName) => {
       const awayTeam = header.competitions[0].competitors.find(
         (team) => team.homeAway === 'away'
       )
-
-      for (const team of boxScore) {
-        if (
-          team.team.displayName.toLowerCase().includes(teamName.toLowerCase())
-        ) {
-          for (const statCategory of team.statistics) {
-            if (
-              ['passing', 'rushing', 'receiving', 'defensive'].includes(
-                statCategory.name.toLowerCase()
-              )
-            ) {
-              const weekIndex = header.week - 1
-              if (!allStats.categories[statCategory.name]) {
-                allStats.categories[statCategory.name] = {}
-              }
-
-              for (const player of statCategory.athletes) {
-                if (
-                  !allStats.categories[statCategory.name][
-                    player.athlete.displayName
-                  ]
-                ) {
-                  allStats.categories[statCategory.name][
-                    player.athlete.displayName
-                  ] = {}
+      if (boxScore) {
+        for (const team of boxScore) {
+          if (
+            team.team.displayName.toLowerCase().includes(teamName.toLowerCase())
+          ) {
+            for (const statCategory of team.statistics) {
+              if (
+                ['passing', 'rushing', 'receiving', 'defensive'].includes(
+                  statCategory.name.toLowerCase()
+                )
+              ) {
+                const weekIndex = header.week - 1
+                if (!allStats.categories[statCategory.name]) {
+                  allStats.categories[statCategory.name] = {}
                 }
-                for (const [i, stat] of player.stats.entries()) {
-                  const description = statCategory.descriptions[i]
 
+                for (const player of statCategory.athletes) {
                   if (
                     !allStats.categories[statCategory.name][
                       player.athlete.displayName
-                    ][description]
+                    ]
                   ) {
                     allStats.categories[statCategory.name][
                       player.athlete.displayName
-                    ][description] = Array(week).fill(0)
+                    ] = {}
                   }
-                  allStats.categories[statCategory.name][
-                    player.athlete.displayName
-                  ][description][weekIndex] = stat
+                  for (const [i, stat] of player.stats.entries()) {
+                    const description = statCategory.descriptions[i]
+
+                    if (
+                      !allStats.categories[statCategory.name][
+                        player.athlete.displayName
+                      ][description]
+                    ) {
+                      allStats.categories[statCategory.name][
+                        player.athlete.displayName
+                      ][description] = Array(week).fill(0)
+                    }
+                    allStats.categories[statCategory.name][
+                      player.athlete.displayName
+                    ][description][weekIndex] = stat
+                  }
                 }
               }
             }
