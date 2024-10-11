@@ -19,17 +19,46 @@ export const getWeek = () => {
   }
 }
 
+const getLastWord = (str) => {
+  const words = str.split(' ')
+  return words[words.length - 1]
+}
+
 export const getTeamRankings = (teamObj) => {
   let stats = {}
   for (const category in teamRankings) {
-    const teamData = teamRankings[category].find(
-      (team) => team.Team === teamObj.location
-    )
+    let teamData
+    if (
+      ['giants', 'jets', 'chargers'].some((team) =>
+        teamObj?.teamData?.displayName?.toLowerCase().includes(team)
+      )
+    ) {
+      teamData = teamRankings[category].find(
+        (team) =>
+          getLastWord(team.Team).toLowerCase() ===
+          getLastWord(teamObj.teamData.displayName).toLowerCase()
+      )
+    } else {
+      teamData = teamRankings[category].find(
+        (team) => team.Team === teamObj.location
+      )
+    }
+
     if (teamData) {
       stats[category] = teamData
     }
   }
+
   return stats
+
+  //   const teamData = teamRankings[category].find(
+  //     (team) => team.Team === teamObj.location
+  //   )
+  //   if (teamData) {
+  //     stats[category] = teamData
+  //   }
+  // }
+  // return stats
 }
 
 const week = getWeek()
@@ -94,7 +123,13 @@ export const getNextOpp = async (teamName) => {
 
 export const getTeamStatData = async (teamName) => {
   console.log('Running getTeamStatData: teamName: ', teamName)
-  let allStats = { team: teamName, location: '', gamesData: [], categories: {} }
+  let allStats = {
+    team: teamName,
+    location: '',
+    teamData: {},
+    gamesData: [],
+    categories: {},
+  }
   const gameData = await getPrevGameData(teamName)
 
   console.log('Game data: ', gameData)
@@ -104,6 +139,7 @@ export const getTeamStatData = async (teamName) => {
         team.team.displayName.toLowerCase().includes(teamName.toLowerCase())
       ) {
         allStats.location = team.team.location
+        allStats.teamData = team.team
       }
     }
   )
@@ -172,15 +208,18 @@ export const getTeamStatData = async (teamName) => {
           }
         }
       }
+
       allStats.gamesData.push({
         week: header.week,
         date: header.competitions[0].date,
+
         homeTeam: {
           name: homeTeam.team.displayName,
           abbreviation: homeTeam.team.abbreviation,
           score: homeTeam.score,
           result: homeTeam.winner ? 'W' : 'L',
           location: homeTeam.team.location,
+          teamData: homeTeam.team,
         },
         awayTeam: {
           name: awayTeam.team.displayName,
@@ -188,6 +227,7 @@ export const getTeamStatData = async (teamName) => {
           score: awayTeam.score,
           result: awayTeam.winner ? 'W' : 'L',
           location: awayTeam.team.location,
+          teamData: awayTeam.team,
         },
       })
     }

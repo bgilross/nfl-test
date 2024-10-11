@@ -8,9 +8,9 @@ import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 import { DataContext, useDataContext } from '../context/dataContext'
 
-const PlayerTable = ({ playerName }) => {
+const PlayerTable = ({ playerName, teamNum }) => {
   const { currentData } = useDataContext()
-  const { gamesData, categories } = currentData.team1
+  const { gamesData, categories } = currentData[teamNum]
   const numWeeks = gamesData?.length
 
   if (!currentData || !gamesData || !categories) {

@@ -1,12 +1,11 @@
 import * as React from 'react'
 import Popover from '@mui/material/Popover'
 import Typography from '@mui/material/Typography'
-import TeamStatsDisplay from './TeamStatsDisplay'
-import TeamStats from './TeamStats'
-import { DataContext, useDataContext } from '../context/dataContext'
+
+import { useDataContext } from '../context/dataContext'
 import PlayerTable from './PlayerTable'
 
-const PlayerPopOver = ({ children, gamesData, playerName }) => {
+const PlayerPopOver = ({ children, gamesData, playerName, teamNum }) => {
   const [anchorEl, setAnchorEl] = React.useState(null)
 
   const { currentTeam } = useDataContext()
@@ -48,7 +47,7 @@ const PlayerPopOver = ({ children, gamesData, playerName }) => {
         disableRestoreFocus
       >
         {/* <Typography sx={{ p: 1 }}> */}
-        <PlayerTable playerName={playerName} />
+        <PlayerTable playerName={playerName} teamNum={teamNum} />
         {/* </Typography> */}
       </Popover>
     </div>

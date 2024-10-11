@@ -11,14 +11,15 @@ import { useState } from 'react'
 import TeamRankingsPopOver from './TeamRankingsPopOver'
 
 import PlayerPopOver from './PlayerPopOver'
-const TeamTable = ({ data }) => {
+const TeamTable = ({ data, teamNum }) => {
   const [currentCategory, setCurrentCategory] = useState('offensive')
   const [currentStat, setCurrentStat] = useState('Yards')
   const [currentType, setCurrentType] = useState('rushing')
   const [defStat, setDefStat] = useState('Tackles')
   const [addStat, setAddStat] = useState('attempts')
-  const gamesData = data.team1.gamesData
-  const categories = data.team1.categories
+  const gamesData = data[teamNum].gamesData
+  const categories = data[teamNum].categories
+  const teamData = data[teamNum].teamData
   const numWeeks = gamesData?.length
 
   const weeklyScores = gamesData?.map((game, index) => (
@@ -115,18 +116,13 @@ const TeamTable = ({ data }) => {
       )}
 
       <TableContainer component={Paper} elevation={7}>
-        <Table padding="1" size="small" aria-label="simple table">
+        <Table padding="none" size="small" aria-label="simple table">
           <TableHead>
             <TableRow>
-              <TableCell>
-                <div>Player</div>
+              <TableCell component="th" scope="row" colSpan={2}>
+                <img src={teamData?.logos[0].href} height={100} />
               </TableCell>
-              <TableCell>
-                <div>Stat</div>
-                <div>
-                  {currentCategory === 'defensive' ? defStat : currentStat}
-                </div>
-              </TableCell>
+
               {weeklyScores}
             </TableRow>
           </TableHead>
@@ -187,6 +183,7 @@ const TeamTable = ({ data }) => {
                           <PlayerPopOver
                             gamesData={gamesData}
                             playerName={playerName}
+                            teamNum={teamNum}
                           >
                             <TableCell>{playerName} </TableCell>
                           </PlayerPopOver>

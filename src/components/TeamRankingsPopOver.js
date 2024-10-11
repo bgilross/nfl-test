@@ -1,9 +1,8 @@
 import * as React from 'react'
 import Popover from '@mui/material/Popover'
 import Typography from '@mui/material/Typography'
-import TeamStatsDisplay from './TeamStatsDisplay'
-import TeamStats from './TeamStats'
-import { DataContext, useDataContext } from '../context/dataContext'
+import TeamRankings from './TeamRankings'
+import { useDataContext } from '../context/dataContext'
 
 export default function TeamRankingsPopOver({ children, game }) {
   const [anchorEl, setAnchorEl] = React.useState(null)
@@ -17,14 +16,11 @@ export default function TeamRankingsPopOver({ children, game }) {
   const handlePopoverClose = () => {
     setAnchorEl(null)
   }
-  console.log('current Team: ', teamName)
+
   const open = Boolean(anchorEl)
   const data = game?.awayTeam?.name.includes(teamName)
     ? game.homeTeam
     : game.awayTeam
-
-  console.log('Popver passing: data: ', data)
-  console.log('Popover game: ', game)
 
   return (
     <div>
@@ -53,7 +49,7 @@ export default function TeamRankingsPopOver({ children, game }) {
         disableRestoreFocus
       >
         <Typography sx={{ p: 1 }}>
-          <TeamStats data={data} />
+          <TeamRankings data={data} />
         </Typography>
       </Popover>
     </div>

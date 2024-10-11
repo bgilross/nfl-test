@@ -1,5 +1,5 @@
 {
-  "opponent_completion_pct": [
+  "Opp Completion %": [
     {
       "Rank": 1,
       "Team": "Houston",
@@ -321,7 +321,7 @@
       "2023": 61.93
     }
   ],
-  "opponent_rushing_yards_per_game": [
+  "Opp Rushing Yds/Gm": [
     {
       "Rank": 1,
       "Team": "Baltimore",
@@ -643,7 +643,7 @@
       "2023": 105.3
     }
   ],
-  "opponent_passing_yards_per_game": [
+  "Opp Passhing Yds/Gm": [
     {
       "Rank": 1,
       "Team": "Tennessee",

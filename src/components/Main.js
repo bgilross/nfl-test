@@ -1,10 +1,6 @@
-import { useState } from 'react'
-import PaperContainer from './PaperContainer'
-import GridBox from './GridBox'
-import Grid from '@mui/material/Grid2'
 import { useDataContext } from '../context/dataContext'
-import TeamsStatsDisplay from './TeamStatsDisplay'
 import TeamTable from './TeamTable'
+import TeamRankingsDisplay from './TeamRankingsDisplay'
 
 const Main = () => {
   const { teamName, setTeamName, opp, currentData, handleGetAllData } =
@@ -35,9 +31,18 @@ const Main = () => {
           Check
         </button>
       </div>
-      <TeamsStatsDisplay currentData={currentData} />
-      <div style={{ width: '70%', padding: '10px', margin: '10px' }}>
-        <TeamTable data={currentData} />
+      <TeamRankingsDisplay currentData={currentData} />
+      <div
+        style={{
+          width: '100%',
+          padding: '10px',
+          margin: '10px',
+          display: 'flex',
+          justifyContent: 'space-around',
+        }}
+      >
+        <TeamTable data={currentData} teamNum={'team1'} />
+        <TeamTable data={currentData} teamNum={'team2'} />
       </div>
     </div>
   )

@@ -1,7 +1,6 @@
 import { getTeamRankings } from '../logic/logic'
 
-const TeamStats = ({ data }) => {
-  console.log('TeamStats: data: ', data)
+const TeamRankings = ({ data }) => {
   const stats = getTeamRankings(data)
 
   return (
@@ -28,4 +27,4 @@ const TeamStats = ({ data }) => {
     </div>
   )
 }
-export default TeamStats
+export default TeamRankings
