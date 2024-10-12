@@ -24,7 +24,7 @@ const TeamTable = ({ data, teamNum }) => {
 
   const weeklyScores = gamesData?.map((game, index) => (
     <TableCell align="right" key={index}>
-      <TeamRankingsPopOver game={game}>
+      <TeamRankingsPopOver game={game} teamNum={teamNum}>
         <div>W{index + 1}</div>
         <div>{game.awayTeam.abbreviation}</div>
         <div>@</div>

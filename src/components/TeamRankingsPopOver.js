@@ -4,10 +4,12 @@ import Typography from '@mui/material/Typography'
 import TeamRankings from './TeamRankings'
 import { useDataContext } from '../context/dataContext'
 
-export default function TeamRankingsPopOver({ children, game }) {
+export default function TeamRankingsPopOver({ children, game, teamNum }) {
   const [anchorEl, setAnchorEl] = React.useState(null)
 
-  const { teamName } = useDataContext()
+  const { teamName, opp } = useDataContext()
+
+  const name = teamNum === 'team1' ? teamName : opp
 
   const handlePopoverOpen = (event) => {
     setAnchorEl(event.currentTarget)
@@ -18,9 +20,15 @@ export default function TeamRankingsPopOver({ children, game }) {
   }
 
   const open = Boolean(anchorEl)
-  const data = game?.awayTeam?.name.includes(teamName)
+  console.log('pre setting daata: game: and name ', game, name)
+  const data = game.awayTeam.name.toLowerCase().includes(name.toLowerCase())
     ? game.homeTeam
     : game.awayTeam
+
+  console.log('data created: data: ', data)
+  console.log('awayTeam.name: ', game.awayTeam.name)
+  console.log('name: ', name)
+  console.log(game.awayTeam.name.toLowerCase().includes(name.toLowerCase()))
 
   return (
     <div>

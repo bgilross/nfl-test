@@ -25,20 +25,26 @@ const getLastWord = (str) => {
 }
 
 export const getTeamRankings = (teamObj) => {
+  console.log('getTeamRankings teamObj: ', teamObj)
   let stats = {}
   for (const category in teamRankings) {
     let teamData
     if (
-      ['giants', 'jets', 'chargers'].some((team) =>
+      ['giants', 'jets', 'chargers', 'rams'].some((team) =>
         teamObj?.teamData?.displayName?.toLowerCase().includes(team)
       )
     ) {
+      console.log(
+        'name exception triggered: team and  teamObj.teamData.displayName: : ',
+        teamObj.teamData.displayName
+      )
       teamData = teamRankings[category].find(
         (team) =>
           getLastWord(team.Team).toLowerCase() ===
           getLastWord(teamObj.teamData.displayName).toLowerCase()
       )
     } else {
+      console.log('no name exception triggered teamObj: ', teamObj)
       teamData = teamRankings[category].find(
         (team) => team.Team === teamObj.location
       )
@@ -50,15 +56,6 @@ export const getTeamRankings = (teamObj) => {
   }
 
   return stats
-
-  //   const teamData = teamRankings[category].find(
-  //     (team) => team.Team === teamObj.location
-  //   )
-  //   if (teamData) {
-  //     stats[category] = teamData
-  //   }
-  // }
-  // return stats
 }
 
 const week = getWeek()
@@ -86,7 +83,6 @@ export const getNextGameID = async (teamName) => {
     const response = await axios.get(apiUrl)
 
     const nextEventID = response.data.team.nextEvent[0].id
-    console.log('Next event ID:', nextEventID)
     return nextEventID
   } catch (error) {
     console.error('Error fetching data:', error)
@@ -122,7 +118,6 @@ export const getNextOpp = async (teamName) => {
 }
 
 export const getTeamStatData = async (teamName) => {
-  console.log('Running getTeamStatData: teamName: ', teamName)
   let allStats = {
     team: teamName,
     location: '',
@@ -132,7 +127,6 @@ export const getTeamStatData = async (teamName) => {
   }
   const gameData = await getPrevGameData(teamName)
 
-  console.log('Game data: ', gameData)
   gameData[0].data.gamepackageJSON.header.competitions[0].competitors.forEach(
     (team) => {
       if (
@@ -149,7 +143,6 @@ export const getTeamStatData = async (teamName) => {
   }
 
   for (const game of gameData) {
-    console.log('Game: ', game)
     if (game.data && game.data.gamepackageJSON) {
       const boxScore = game.data.gamepackageJSON.boxscore.players
       const header = game.data.gamepackageJSON.header
@@ -233,7 +226,6 @@ export const getTeamStatData = async (teamName) => {
     }
   }
 
-  console.log('finishing ...', allStats)
   return allStats
 }
 
@@ -253,7 +245,6 @@ const getPrevGameData = async (teamName) => {
 
   try {
     const responses = await Promise.all(gameDataPromises)
-    console.log('get prev game data: responses: ', responses)
     return responses
   } catch (err) {
     console.log(err)
@@ -261,13 +252,9 @@ const getPrevGameData = async (teamName) => {
 }
 
 const getTeamsGameIdByWeek = async (teamName, week) => {
-  console.log(
-    `Running getTeamsGameIdByWeek: teamName: ${teamName}, week: ${week}`
-  )
   const apiUrl = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2024&seasontype=2&week=${week}`
   try {
     const response = await axios.get(apiUrl)
-    console.log(response.data) // Log the entire response for inspection
 
     // Check if the events array is not empty
     if (!response.data.events || response.data.events.length === 0) {
@@ -285,7 +272,6 @@ const getTeamsGameIdByWeek = async (teamName, week) => {
       return null // Ensure we return null if not found
     }
 
-    console.log('Found teamGame:', teamGame)
     return teamGame.id // Return the game ID
   } catch (err) {
     console.log(`Error fetching data for ${teamName} week: ${week}`, err)
@@ -294,7 +280,6 @@ const getTeamsGameIdByWeek = async (teamName, week) => {
 }
 
 const getAllTeamsGameIds = async (teamName) => {
-  console.log('getAllteamGamIds is running: ', teamName)
   let gameIds = []
 
   // Ensure the current week is fetched correctly
@@ -303,7 +288,6 @@ const getAllTeamsGameIds = async (teamName) => {
   // Iterate through the weeks and fetch game IDs
   for (let week = 1; week <= currentWeek; week++) {
     const gameId = await getTeamsGameIdByWeek(teamName, week)
-    console.log('GetTeamsGamesIdByWeek: gameId: ', gameId) // Debugging output
     gameIds.push(gameId)
   }
 

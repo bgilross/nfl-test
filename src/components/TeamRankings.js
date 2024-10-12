@@ -2,6 +2,7 @@ import { getTeamRankings } from '../logic/logic'
 
 const TeamRankings = ({ data }) => {
   const stats = getTeamRankings(data)
+  console.log('data: ', data)
 
   return (
     <div>

@@ -26,6 +26,7 @@ const Main = () => {
         <button
           onClick={() => {
             console.log(currentData)
+            console.log(opp)
           }}
         >
           Check
