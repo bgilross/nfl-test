@@ -3,6 +3,7 @@ import Popover from '@mui/material/Popover'
 import Typography from '@mui/material/Typography'
 import TeamRankings from './TeamRankings'
 import { useDataContext } from '../context/dataContext'
+import BoxScoreTable from './BoxScoreTable'
 
 export default function TeamRankingsPopOver({ children, game, teamNum }) {
   const [anchorEl, setAnchorEl] = React.useState(null)
@@ -58,6 +59,10 @@ export default function TeamRankingsPopOver({ children, game, teamNum }) {
       >
         <Typography sx={{ p: 1 }}>
           <TeamRankings data={data} />
+          <div style={{ display: 'flex' }}>
+            <BoxScoreTable game={game} teamNum={'team1'} />
+            <BoxScoreTable game={game} teamNum={'team2'} />
+          </div>
         </Typography>
       </Popover>
     </div>

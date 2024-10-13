@@ -16,24 +16,10 @@ const TeamTable = ({ data, teamNum }) => {
   const [currentStat, setCurrentStat] = useState('Yards')
   const [currentType, setCurrentType] = useState('rushing')
   const [defStat, setDefStat] = useState('Tackles')
-  const [addStat, setAddStat] = useState('attempts')
   const gamesData = data[teamNum].gamesData
   const categories = data[teamNum].categories
   const teamData = data[teamNum].teamData
   const numWeeks = gamesData?.length
-
-  const weeklyScores = gamesData?.map((game, index) => (
-    <TableCell align="right" key={index}>
-      <TeamRankingsPopOver game={game} teamNum={teamNum}>
-        <div>W{index + 1}</div>
-        <div>{game.awayTeam.abbreviation}</div>
-        <div>@</div>
-        <div>{game.homeTeam.abbreviation}</div>
-        <div>{game.awayTeam.score}</div>
-        <div>{game.homeTeam.score}</div>
-      </TeamRankingsPopOver>
-    </TableCell>
-  ))
 
   if (!gamesData || !categories) {
     return (
@@ -50,6 +36,25 @@ const TeamTable = ({ data, teamNum }) => {
       </div>
     )
   }
+
+  const weeklyScores = gamesData?.map((game, index) => (
+    <TableCell
+      sx={{ backgroundColor: `#${teamData.color}` }}
+      // style={{ fontWeight: 'bold' }}
+      align="right"
+      key={index}
+    >
+      <TeamRankingsPopOver game={game} teamNum={teamNum} currentData={data}>
+        <div>W{index + 1}</div>
+        <div>{game.awayTeam.abbreviation}</div>
+        <div>@</div>
+        <div>{game.homeTeam.abbreviation}</div>
+        <div>{game.awayTeam.score}</div>
+        <div>{game.homeTeam.score}</div>
+      </TeamRankingsPopOver>
+    </TableCell>
+  ))
+
   return (
     <div>
       <select
@@ -57,11 +62,6 @@ const TeamTable = ({ data, teamNum }) => {
         onChange={({ target: { value } }) => setCurrentCategory(value)}
       >
         <option value="">Select a Category</option>
-        {/* {Object.keys(categories).map((category) => (
-          <option key={category} value={category}>
-            {category}
-          </option>
-        ))} */}
         <option value="offensive">Offensive</option>
         <option value="defensive">Defensive</option>
       </select>
@@ -119,8 +119,22 @@ const TeamTable = ({ data, teamNum }) => {
         <Table padding="none" size="small" aria-label="simple table">
           <TableHead>
             <TableRow>
-              <TableCell component="th" scope="row" colSpan={2}>
-                <img src={teamData?.logos[0].href} height={100} />
+              <TableCell
+                sx={{
+                  backgroundColor: `#${teamData?.alternateColor}`,
+                  height: '100px', // Set a fixed height for vertical centering to work
+                  textAlign: 'center', // Center the content horizontally
+                  verticalAlign: 'middle', // Center the content vertically
+                  padding: 0, // Optional: Remove padding if needed
+                }}
+                component="th"
+                scope="row"
+                colSpan={2}
+              >
+                <img
+                  src={teamData?.logos[0].href}
+                  style={{ height: '100px' }}
+                />
               </TableCell>
 
               {weeklyScores}

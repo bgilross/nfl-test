@@ -205,6 +205,7 @@ export const getTeamStatData = async (teamName) => {
       allStats.gamesData.push({
         week: header.week,
         date: header.competitions[0].date,
+        boxScore: boxScore,
 
         homeTeam: {
           name: homeTeam.team.displayName,

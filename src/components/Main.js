@@ -10,6 +10,12 @@ const Main = () => {
     handleGetAllData()
   }
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleButton()
+    }
+  }
+
   return (
     <div>
       <div>
@@ -19,6 +25,7 @@ const Main = () => {
           onChange={(e) => {
             setTeamName(e.target.value)
           }}
+          onKeyDown={handleKeyDown}
         />
         <button onClick={handleButton}>Enter</button>
       </div>
