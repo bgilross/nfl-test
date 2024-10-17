@@ -21,6 +21,8 @@ const TeamTable = ({ data, teamNum }) => {
   const teamData = data[teamNum].teamData
   const numWeeks = gamesData?.length
 
+  const fontColor = teamData.color
+
   if (!gamesData || !categories) {
     return (
       <div>
@@ -39,7 +41,10 @@ const TeamTable = ({ data, teamNum }) => {
 
   const weeklyScores = gamesData?.map((game, index) => (
     <TableCell
-      sx={{ backgroundColor: `#${teamData.color}` }}
+      sx={{
+        backgroundColor: `#${teamData.color}`,
+        color: `#${teamData.alternateColor}`,
+      }}
       // style={{ fontWeight: 'bold' }}
       align="right"
       key={index}
