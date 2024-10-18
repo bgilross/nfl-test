@@ -21,8 +21,6 @@ const TeamTable = ({ data, teamNum }) => {
   const teamData = data[teamNum].teamData
   const numWeeks = gamesData?.length
 
-  const fontColor = teamData.color
-
   if (!gamesData || !categories) {
     return (
       <div>
