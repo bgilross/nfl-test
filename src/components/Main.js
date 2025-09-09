@@ -1,58 +1,136 @@
-import { useDataContext } from '../context/dataContext'
-import TeamTable from './TeamTable'
-import TeamRankingsDisplay from './TeamRankingsDisplay'
+import { useDataContext } from "../context/dataContext"
+import TextField from "@mui/material/TextField"
+import Autocomplete from "@mui/material/Autocomplete"
+import Button from "@mui/material/Button"
+import CircularProgress from "@mui/material/CircularProgress"
+import Select from "@mui/material/Select"
+import MenuItem from "@mui/material/MenuItem"
+import TeamTable from "./TeamTable"
+import TeamRankingsDisplay from "./TeamRankingsDisplay"
+import DebugPanel from "./DebugPanel"
 
 const Main = () => {
-  const { teamName, setTeamName, opp, currentData, handleGetAllData } =
-    useDataContext()
+	const {
+		teamName,
+		setTeamName,
+		opp,
+		currentData,
+		handleGetAllData,
+		loading,
+		error,
+		teamOptions,
+		selectedYear,
+		setSelectedYear,
+	} = useDataContext()
 
-  const handleButton = () => {
-    handleGetAllData()
-  }
+	const handleKeyDown = (e) => {
+		if (e.key === "Enter") {
+			handleGetAllData()
+		}
+	}
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleButton()
-    }
-  }
+	const handleButton = () => {
+		handleGetAllData()
+	}
 
-  return (
-    <div>
-      <div>
-        <input
-          type="text"
-          value={teamName}
-          onChange={(e) => {
-            setTeamName(e.target.value)
-          }}
-          onKeyDown={handleKeyDown}
-        />
-        <button onClick={handleButton}>Enter</button>
-      </div>
-      <div>
-        <button
-          onClick={() => {
-            console.log(currentData)
-            console.log(opp)
-          }}
-        >
-          Check
-        </button>
-      </div>
-      <TeamRankingsDisplay currentData={currentData} />
-      <div
-        style={{
-          width: '100%',
-          padding: '10px',
-          margin: '10px',
-          display: 'flex',
-          justifyContent: 'space-around',
-        }}
-      >
-        <TeamTable data={currentData} teamNum={'team1'} />
-        <TeamTable data={currentData} teamNum={'team2'} />
-      </div>
-    </div>
-  )
+	return (
+		<div style={{ paddingBottom: 40 }}>
+			<div
+				style={{
+					display: "flex",
+					gap: 12,
+					alignItems: "center",
+					padding: 8,
+					flexWrap: "wrap",
+				}}
+			>
+				<Autocomplete
+					sx={{ width: 260 }}
+					options={teamOptions}
+					value={teamName || null}
+					onChange={(_, val) => setTeamName(val || "")}
+					renderInput={(params) => (
+						<TextField
+							{...params}
+							label="Select Team"
+							placeholder="Start typing..."
+							size="small"
+							onKeyDown={handleKeyDown}
+						/>
+					)}
+				/>
+				<div>
+					<label style={{ fontSize: 12, color: "#555" }}>Season</label>
+					<Select
+						size="small"
+						value={selectedYear}
+						onChange={(e) => setSelectedYear(e.target.value)}
+						style={{ width: 110, marginLeft: 6 }}
+					>
+						{[...Array(7)].map((_, i) => {
+							const baseYear =
+								new Date().getMonth() >= 8
+									? new Date().getFullYear()
+									: new Date().getFullYear() - 1
+							const year = baseYear - i
+							return (
+								<MenuItem
+									key={year}
+									value={year}
+								>
+									{year}
+								</MenuItem>
+							)
+						})}
+					</Select>
+				</div>
+				<Button
+					variant="contained"
+					onClick={handleButton}
+					disabled={!teamName || loading}
+				>
+					{loading ? "Loading..." : "Load"}
+				</Button>
+				{loading && <CircularProgress size={20} />}
+				{error && <span style={{ color: "red" }}>{error}</span>}
+			</div>
+			<div
+				style={{
+					fontSize: "0.8rem",
+					color: "#555",
+					paddingLeft: 8,
+					minHeight: 20,
+				}}
+			>
+				{opp && !loading && <span>Next Opponent: {opp}</span>}
+			</div>
+			<TeamRankingsDisplay currentData={currentData} />
+			<div
+				style={{
+					width: "100%",
+					padding: 10,
+					margin: "10px 0",
+					display: "flex",
+					justifyContent: "space-around",
+					gap: 24,
+					flexWrap: "wrap",
+				}}
+			>
+				<TeamTable
+					data={currentData}
+					teamNum="team1"
+				/>
+				<TeamTable
+					data={currentData}
+					teamNum="team2"
+				/>
+			</div>
+			<DebugPanel
+				teamName={teamName}
+				selectedYear={selectedYear}
+			/>
+		</div>
+	)
 }
+
 export default Main
