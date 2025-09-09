@@ -1,0 +1,8 @@
+# Ignore backend Python service so Vercel only builds the React app
+
+backend/
+_.py
+alembic/
+_.db
+.venv/
+\*\*/**pycache**/

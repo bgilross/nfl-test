@@ -1,4 +1,15 @@
 {
+	"version": 2,
+	"framework": "create-react-app",
+	"buildCommand": "npm run build",
+	"outputDirectory": "build",
+	"ignoreCommand": "echo Skipping backend",
+	"functions": {},
+	"env": {
+		"REACT_APP_API_BASE": "https://your-backend-domain.example"
+	}
+}
+{
 	"buildCommand": "npm install && pip install -r requirements.txt && npm run build",
 	"outputDirectory": "build",
 	"functions": {

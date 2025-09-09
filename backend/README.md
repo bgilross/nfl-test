@@ -31,6 +31,7 @@ uvicorn app.main:app --reload
 Visit: http://127.0.0.1:8000/docs
 
 ## Switch to Neon Postgres
+
 1. Create a Neon project & database.
 2. Copy the connection string (ensure it includes `sslmode=require` if Neon requires TLS).
 3. Set the environment variable (PowerShell):
@@ -41,6 +42,7 @@ Visit: http://127.0.0.1:8000/docs
 5. Start the server: `uvicorn app.main:app --reload`.
 
 ## Adding New Model Changes
+
 1. Edit models in `models.py`.
 2. Autogenerate a migration:
    ```powershell
@@ -49,9 +51,10 @@ Visit: http://127.0.0.1:8000/docs
    ```
 
 ## Notes
+
 - This baseline intentionally keeps logic minimal; port your existing scraper & API handlers into the provided placeholders.
 - For production, add auth / key protection around any scrape-triggering endpoint.
-Backend service (FastAPI + SQLite) for structured TeamRankings data.
+  Backend service (FastAPI + SQLite) for structured TeamRankings data.
 
 Endpoints:
 
