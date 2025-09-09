@@ -1,0 +1,16 @@
+name: Scheduled Scrape
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # every 6 hours
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Curl scrape endpoint
+        run: |
+          curl -X POST -H "X-API-Key: ${{ secrets.SCRAPE_API_KEY }}" "${{ secrets.API_BASE_URL }}/api/scrape?season=$(date +%Y)"

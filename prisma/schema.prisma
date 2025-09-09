@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id        Int            @id @default(autoincrement())
+  name      String         @unique
+  snapshots StatSnapshot[]
+}
+
+model Category {
+  id        Int            @id @default(autoincrement())
+  slug      String         @unique
+  name      String
+  snapshots StatSnapshot[]
+}
+
+model StatSnapshot {
+  id           Int       @id @default(autoincrement())
+  teamId       Int
+  categoryId   Int
+  createdAt    DateTime  @default(now())
+  seasonYear   Int?
+  currentYear  Int?
+  prevYear     Int?
+  valueCurrent Float?
+  valuePrev    Float?
+  last1        Float?
+  last3        Float?
+  home         Float?
+  away         Float?
+  rank         Int?
+  team         Team      @relation(fields: [teamId], references: [id])
+  category     Category  @relation(fields: [categoryId], references: [id])
+
+  @@index([teamId, categoryId, createdAt])
+  @@index([categoryId, seasonYear])
+}
