@@ -1,0 +1,12 @@
+{
+	"buildCommand": "npm install && pip install -r requirements.txt && npm run build",
+	"outputDirectory": "build",
+	"functions": {
+		"api/index.py": {
+			"runtime": "python3.11"
+		}
+	},
+	"env": {
+		"PYTHONUNBUFFERED": "1"
+	}
+}
