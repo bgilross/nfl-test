@@ -67,6 +67,9 @@ urls = [
     "opponent-completion-pct",
     "opponent-rushing-yards-per-game",
     "opponent-passing-yards-per-game",
+    "opponent-rushing-touchdowns-per-game",
+    "opponent-gross-passing-yards-per-game",
+    "opponent-sacks-per-game",
 ]
 
 # Dictionary to hold all the results

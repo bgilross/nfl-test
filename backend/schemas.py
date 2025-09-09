@@ -17,12 +17,14 @@ class StatRow(BaseModel):
     category: str
     scraped_at: datetime
     rank: int | None
-    val_2024: float | None
+    current_year: int | None
+    value_current: float | None
     last_3: float | None
     last_1: float | None
     home: float | None
     away: float | None
-    prev_2023: float | None
+    prev_year: int | None
+    value_prev: float | None
 
 
 class TeamAggregate(BaseModel):

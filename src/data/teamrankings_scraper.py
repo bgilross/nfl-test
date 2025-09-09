@@ -27,6 +27,9 @@ STAT_ENDPOINTS = {
     "opponent-completion-pct": "Opp Cmpltn %",
     "opponent-rushing-yards-per-game": "Opp Rushing Yds",
     "opponent-passing-yards-per-game": "Opp Passing Yds",
+    "opponent-rushing-touchdowns-per-game": "Opp Rush TDs",
+    "opponent-gross-passing-yards-per-game": "Opp GROSS Pass Yds",
+    "opponent-sacks-per-game": "Opp Sacks Per Game",
 }
 
 DEFAULT_HEADERS = {

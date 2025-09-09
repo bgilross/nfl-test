@@ -15,55 +15,49 @@ const TeamTable = ({ data, teamNum }) => {
 	const [currentStat, setCurrentStat] = useState("Yards")
 	const [currentType, setCurrentType] = useState("rushing")
 	const [defStat, setDefStat] = useState("Tackles")
-	const gamesData = data[teamNum].gamesData
-	const categories = data[teamNum].categories
-	const teamData = data[teamNum].teamData
+
+	// Pull raw refs (may be undefined initially)
+	const gamesData = data?.[teamNum]?.gamesData
+	const categories = data?.[teamNum]?.categories
+	const teamData = data?.[teamNum]?.teamData
 	const numWeeks = gamesData?.length
+
+	// Always call hooks before any returns (rules-of-hooks compliance)
+	const weeklyScores = useMemo(() => {
+		if (!gamesData || !teamData) return []
+		return gamesData.map((game, index) => (
+			<TableCell
+				sx={{
+					backgroundColor: `#${teamData.color}`,
+					color: `#${teamData.alternateColor}`,
+				}}
+				align="right"
+				key={index}
+			>
+				<TeamRankingsPopOver
+					game={game}
+					teamNum={teamNum}
+					currentData={data}
+				>
+					<div>W{index + 1}</div>
+					<div>{game.awayTeam.abbreviation}</div>
+					<div>@</div>
+					<div>{game.homeTeam.abbreviation}</div>
+					<div>{game.awayTeam.score}</div>
+					<div>{game.homeTeam.score}</div>
+				</TeamRankingsPopOver>
+			</TableCell>
+		))
+	}, [gamesData, teamData, data, teamNum])
 
 	if (!gamesData || !categories) {
 		return (
 			<div>
-				{" "}
-				<h4>No Table Data </h4>
-				<button
-					onClick={() => {
-						console.log(data)
-					}}
-				>
-					Check
-				</button>
+				<h4>No Table Data</h4>
+				<button onClick={() => console.log(data)}>Check</button>
 			</div>
 		)
 	}
-
-	const weeklyScores = useMemo(
-		() =>
-			gamesData?.map((game, index) => (
-				<TableCell
-					sx={{
-						backgroundColor: `#${teamData.color}`,
-						color: `#${teamData.alternateColor}`,
-					}}
-					// style={{ fontWeight: 'bold' }}
-					align="right"
-					key={index}
-				>
-					<TeamRankingsPopOver
-						game={game}
-						teamNum={teamNum}
-						currentData={data}
-					>
-						<div>W{index + 1}</div>
-						<div>{game.awayTeam.abbreviation}</div>
-						<div>@</div>
-						<div>{game.homeTeam.abbreviation}</div>
-						<div>{game.awayTeam.score}</div>
-						<div>{game.homeTeam.score}</div>
-					</TeamRankingsPopOver>
-				</TableCell>
-			)),
-		[gamesData, teamData, data, teamNum]
-	)
 
 	return (
 		<div>
@@ -93,6 +87,7 @@ const TeamTable = ({ data, teamNum }) => {
 								</option>
 							)
 						}
+						return null
 					})}
 				</select>
 			)}
@@ -162,6 +157,7 @@ const TeamTable = ({ data, teamNum }) => {
 							>
 								<img
 									src={teamData?.logos[0].href}
+									alt={teamData?.displayName || "team logo"}
 									style={{ height: "100px" }}
 								/>
 							</TableCell>

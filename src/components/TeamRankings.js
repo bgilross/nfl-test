@@ -1,8 +1,21 @@
-import { getTeamRankings } from "../logic/logic"
-import { useMemo } from "react"
+import { getBackendTeamAggregate } from "../logic/logic"
+import { useEffect, useState } from "react"
 
 const TeamRankings = ({ data }) => {
-	const stats = useMemo(() => getTeamRankings(data), [data])
+	const [backendStats, setBackendStats] = useState(null)
+
+	useEffect(() => {
+		;(async () => {
+			const loc = data?.location || data?.teamData?.location
+			const disp = data?.teamData?.displayName
+			if (loc || disp) {
+				const agg = await getBackendTeamAggregate(loc, disp)
+				setBackendStats(agg)
+			} else {
+				setBackendStats(null)
+			}
+		})()
+	}, [data?.location, data?.teamData?.location, data?.teamData?.displayName])
 
 	return (
 		<div style={{ fontSize: ".75rem" }}>
@@ -14,27 +27,38 @@ const TeamRankings = ({ data }) => {
 					gap: "12px",
 				}}
 			>
-				{Object.entries(stats).map(([category, data]) => (
-					<li
-						key={category}
-						style={{ margin: "1px" }}
-					>
-						<h5>{category}</h5>
-						<ul>
-							{Object.entries(data).map(([key, value]) => {
-								if (key === "Team" || key === "Rank") return null
-								return (
-									<li
-										key={key}
-										style={{ textWrap: "nowrap" }}
-									>
-										{key}: {value}
+				{Object.entries(backendStats?.categories || {}).map(
+					([category, row]) => (
+						<li
+							key={category}
+							style={{ margin: "1px" }}
+						>
+							<h5>{category}</h5>
+							<ul>
+								{row.current_year != null && (
+									<li style={{ textWrap: "nowrap" }}>
+										{row.current_year}: {row.value_current}
 									</li>
-								)
-							})}
-						</ul>
+								)}
+								<li style={{ textWrap: "nowrap" }}>Last 3: {row.last_3}</li>
+								<li style={{ textWrap: "nowrap" }}>Last 1: {row.last_1}</li>
+								<li style={{ textWrap: "nowrap" }}>Home: {row.home}</li>
+								<li style={{ textWrap: "nowrap" }}>Away: {row.away}</li>
+								{row.prev_year != null && (
+									<li style={{ textWrap: "nowrap" }}>
+										{row.prev_year}: {row.value_prev}
+									</li>
+								)}
+							</ul>
+						</li>
+					)
+				)}
+				{/* Fallback to static if backend not available */}
+				{!backendStats && (
+					<li style={{ listStyle: "none", color: "#999" }}>
+						Loading team rankings...
 					</li>
-				))}
+				)}
 			</ul>
 		</div>
 	)

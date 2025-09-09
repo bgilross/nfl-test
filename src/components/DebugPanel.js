@@ -4,7 +4,7 @@ import Paper from "@mui/material/Paper"
 import CircularProgress from "@mui/material/CircularProgress"
 import TextField from "@mui/material/TextField"
 
-const apiBase = process.env.REACT_APP_API_BASE || "" // assume same origin proxy /api
+const apiBase = process.env.REACT_APP_API_BASE || "" // if empty, requests hit same origin
 
 const DebugPanel = ({ teamName, selectedYear }) => {
 	const [open, setOpen] = useState(false)
@@ -16,15 +16,32 @@ const DebugPanel = ({ teamName, selectedYear }) => {
 		setBusy(true)
 		setOutput(null)
 		try {
+			const hasBody = !!opts
+			const controller = new AbortController()
+			const timeout = setTimeout(() => controller.abort(), 15000)
 			const res = await fetch(`${apiBase}${path}`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: opts ? JSON.stringify(opts) : undefined,
+				headers: hasBody ? { "Content-Type": "application/json" } : undefined,
+				body: hasBody ? JSON.stringify(opts) : undefined,
+				signal: controller.signal,
 			})
-			const data = await res.json()
-			setOutput(data)
+			clearTimeout(timeout)
+			if (!res.ok) {
+				const text = await res.text()
+				setOutput({ error: `HTTP ${res.status}`, body: text?.slice(0, 400) })
+				return
+			}
+			// Try JSON, fall back to text snippet
+			const ct = res.headers.get("content-type") || ""
+			if (ct.includes("application/json")) {
+				const data = await res.json()
+				setOutput(data)
+			} else {
+				const text = await res.text()
+				setOutput({ warning: "Non-JSON response", body: text?.slice(0, 400) })
+			}
 		} catch (e) {
-			setOutput({ error: e.message })
+			setOutput({ error: e?.message || String(e) })
 		} finally {
 			setBusy(false)
 		}
@@ -44,6 +61,9 @@ const DebugPanel = ({ teamName, selectedYear }) => {
 					elevation={4}
 					style={{ padding: "12px", marginTop: "10px", maxWidth: 900 }}
 				>
+					<div style={{ fontSize: "0.8rem", color: "#666", marginBottom: 8 }}>
+						API base: {apiBase || "(same origin)"}
+					</div>
 					<div
 						style={{
 							display: "flex",
@@ -54,14 +74,32 @@ const DebugPanel = ({ teamName, selectedYear }) => {
 					>
 						<Button
 							disabled={busy}
-							onClick={() => fetchJSON("/api/debug/validate-scrape")}
+							onClick={async () => {
+								setBusy(true)
+								setOutput(null)
+								try {
+									const res = await fetch(`${apiBase}/categories`)
+									const data = await res.json()
+									setOutput({ ping: "ok", data })
+								} catch (e) {
+									setOutput({ ping: "failed", error: e?.message || String(e) })
+								} finally {
+									setBusy(false)
+								}
+							}}
+						>
+							Ping Categories (GET)
+						</Button>
+						<Button
+							disabled={busy}
+							onClick={() => fetchJSON("/debug/validate-scrape")}
 						>
 							Validate Scrape
 						</Button>
 						<Button
 							disabled={busy || !teamName}
 							onClick={() =>
-								fetchJSON("/api/debug/verify-espn", {
+								fetchJSON("/debug/verify-espn", {
 									team: teamName || "Detroit",
 									season: selectedYear,
 									limit_weeks: limitWeeks ? Number(limitWeeks) : null,
@@ -72,7 +110,7 @@ const DebugPanel = ({ teamName, selectedYear }) => {
 						</Button>
 						<Button
 							disabled={busy}
-							onClick={() => fetchJSON("/api/scrape")}
+							onClick={() => fetchJSON("/scrape")}
 						>
 							Trigger Scrape
 						</Button>

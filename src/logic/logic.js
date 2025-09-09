@@ -1,6 +1,39 @@
 import teamLegend from "../data/team_legend.json"
 import axios from "axios"
-import teamRankings from "../data/teamrankings_stats.json"
+// Removed static teamRankings JSON dependency (migrated to backend-powered data)
+
+const apiBase = process.env.REACT_APP_API_BASE || ""
+
+const toCandidates = (locationName, displayName) => {
+	const cands = []
+	if (locationName) cands.push(locationName)
+	if (displayName) cands.push(displayName)
+	if (displayName) {
+		const parts = displayName.split(" ")
+		const nick = parts[parts.length - 1]
+		if (displayName.startsWith("Los Angeles")) {
+			cands.push(`LA ${nick}`)
+		}
+		if (displayName.startsWith("New York")) {
+			cands.push(`NY ${nick}`)
+		}
+	}
+	return Array.from(new Set(cands))
+}
+
+export const getBackendTeamAggregate = async (locationName, displayName) => {
+	const candidates = toCandidates(locationName, displayName)
+	for (const name of candidates) {
+		try {
+			const url = `${apiBase}/team/${encodeURIComponent(name)}`
+			const res = await axios.get(url)
+			return res.data
+		} catch (e) {
+			// try next candidate on 404/other errors
+		}
+	}
+	return null
+}
 
 // const cache = {}
 
@@ -29,44 +62,9 @@ export const getWeek = (seasonYear = getSeasonYear(), now = new Date()) => {
 	return week
 }
 
-const getLastWord = (str) => {
-	const words = str.split(" ")
-	return words[words.length - 1]
-}
+// Removed getLastWord (no longer needed for static JSON name matching)
 
-export const getTeamRankings = (teamObj) => {
-	console.log("getTeamRankings teamObj: ", teamObj)
-	let stats = {}
-	for (const category in teamRankings) {
-		let teamData
-		if (
-			["giants", "jets", "chargers", "rams"].some((team) =>
-				teamObj?.teamData?.displayName?.toLowerCase().includes(team)
-			)
-		) {
-			console.log(
-				"name exception triggered: team and  teamObj.teamData.displayName: : ",
-				teamObj.teamData.displayName
-			)
-			teamData = teamRankings[category].find(
-				(team) =>
-					getLastWord(team.Team).toLowerCase() ===
-					getLastWord(teamObj.teamData.displayName).toLowerCase()
-			)
-		} else {
-			console.log("no name exception triggered teamObj: ", teamObj)
-			teamData = teamRankings[category].find(
-				(team) => team.Team === teamObj.location
-			)
-		}
-
-		if (teamData) {
-			stats[category] = teamData
-		}
-	}
-
-	return stats
-}
+// Legacy getTeamRankings removed; backend now authoritative.
 
 // removed global week; use getWeek(seasonYear) where needed
 

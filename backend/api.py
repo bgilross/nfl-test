@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -42,28 +42,29 @@ def list_categories(session: Session = Depends(get_session)):
 
 
 @app.get("/stats/{category_slug}", response_model=list[schemas.StatRow])
-def latest_for_category(category_slug: str, session: Session = Depends(get_session)):
+def latest_for_category(
+    category_slug: str,
+    season: int | None = Query(None, description="Season year to filter (e.g. 2025)"),
+    session: Session = Depends(get_session),
+):
     category = (
         session.query(models.Category).filter_by(slug=category_slug).one_or_none()
     )
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
     # Find latest timestamp for this category
-    latest_ts = (
-        session.query(models.StatSnapshot.scraped_at)
-        .filter_by(category_id=category.id)
-        .order_by(models.StatSnapshot.scraped_at.desc())
-        .limit(1)
-        .scalar()
-    )
+    q = session.query(models.StatSnapshot.scraped_at).filter_by(category_id=category.id)
+    if season is not None:
+        q = q.filter(models.StatSnapshot.season_year == season)
+    latest_ts = q.order_by(models.StatSnapshot.scraped_at.desc()).limit(1).scalar()
     if not latest_ts:
         return []
-    snaps = (
-        session.query(models.StatSnapshot)
-        .filter_by(category_id=category.id, scraped_at=latest_ts)
-        .join(models.Team)
-        .all()
+    snaps_q = session.query(models.StatSnapshot).filter_by(
+        category_id=category.id, scraped_at=latest_ts
     )
+    if season is not None:
+        snaps_q = snaps_q.filter(models.StatSnapshot.season_year == season)
+    snaps = snaps_q.join(models.Team).all()
     out = []
     for s in snaps:
         out.append(
@@ -72,29 +73,33 @@ def latest_for_category(category_slug: str, session: Session = Depends(get_sessi
                 category=category.display_name,
                 scraped_at=s.scraped_at,
                 rank=s.rank,
-                val_2024=s.val_2024,
+                current_year=s.current_year,
+                value_current=s.value_current,
                 last_3=s.last_3,
                 last_1=s.last_1,
                 home=s.home,
                 away=s.away,
-                prev_2023=s.prev_2023,
+                prev_year=s.prev_year,
+                value_prev=s.value_prev,
             )
         )
     return out
 
 
 @app.get("/team/{team_name}", response_model=schemas.TeamAggregate)
-def latest_for_team(team_name: str, session: Session = Depends(get_session)):
+def latest_for_team(
+    team_name: str,
+    season: int | None = Query(None, description="Season year to filter"),
+    session: Session = Depends(get_session),
+):
     team = session.query(models.Team).filter_by(name=team_name).one_or_none()
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
     # For each category, pick latest snapshot for that team
-    snaps = (
-        session.query(models.StatSnapshot)
-        .filter_by(team_id=team.id)
-        .join(models.Category)
-        .all()
-    )
+    snaps_q = session.query(models.StatSnapshot).filter_by(team_id=team.id)
+    if season is not None:
+        snaps_q = snaps_q.filter(models.StatSnapshot.season_year == season)
+    snaps = snaps_q.join(models.Category).all()
     latest_per_category = {}
     for snap in snaps:
         existing = latest_per_category.get(snap.category.display_name)
@@ -107,20 +112,25 @@ def latest_for_team(team_name: str, session: Session = Depends(get_session)):
             category=display_name,
             scraped_at=s.scraped_at,
             rank=s.rank,
-            val_2024=s.val_2024,
+            current_year=s.current_year,
+            value_current=s.value_current,
             last_3=s.last_3,
             last_1=s.last_1,
             home=s.home,
             away=s.away,
-            prev_2023=s.prev_2023,
+            prev_year=s.prev_year,
+            value_prev=s.value_prev,
         )
     return schemas.TeamAggregate(team=team.name, categories=categories_out)
 
 
 @app.post("/scrape")
-def trigger_scrape(session: Session = Depends(get_session)):
-    inserted = scrape_and_store(session)
-    return {"inserted": inserted}
+def trigger_scrape(
+    season: int | None = Query(None, description="Season year to associate with scrape"),
+    session: Session = Depends(get_session),
+):
+    inserted = scrape_and_store(session, season_year=season)
+    return {"inserted": inserted, "season": season}
 
 
 # ---------------------- DEBUG / DIAGNOSTICS ----------------------

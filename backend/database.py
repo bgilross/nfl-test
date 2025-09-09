@@ -35,6 +35,36 @@ def init_db():
     if _engine_url.startswith("sqlite"):
         # Create tables automatically only for local dev SQLite; for managed DBs use migrations
         Base.metadata.create_all(bind=ENGINE)
+        _maybe_upgrade_sqlite_schema()
+
+
+def _maybe_upgrade_sqlite_schema():
+    """Lightweight, additive schema upgrade for dev SQLite.
+
+    Adds newly introduced columns if they don't exist yet so that code changes
+    (e.g. replacing val_2024/prev_2023 with dynamic year fields) don't crash
+    on existing local databases. This is NOT a replacement for real migrations
+    in production; use Alembic there.
+    """
+    desired_new_cols = {
+        # column_name: SQL fragment
+        "current_year": "INTEGER",
+        "value_current": "FLOAT",
+        "prev_year": "INTEGER",
+        "value_prev": "FLOAT",
+        "season_year": "INTEGER",
+    }
+    try:
+        with ENGINE.connect() as conn:
+            res = conn.exec_driver_sql("PRAGMA table_info(stat_snapshots)")
+            existing = {row[1] for row in res.fetchall()}  # column name at index 1
+            to_add = [c for c in desired_new_cols if c not in existing]
+            for col in to_add:
+                ddl = f"ALTER TABLE stat_snapshots ADD COLUMN {col} {desired_new_cols[col]}"
+                conn.exec_driver_sql(ddl)
+    except Exception:
+        # Silent fail; worst case app will still raise the original error and user can recreate DB
+        pass
 
 
 @contextmanager
