@@ -13,7 +13,9 @@
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
 		"test": "jest",
-		"seed": "node scripts/seed.cjs"
+		"seed": "node scripts/seed.cjs",
+		"postinstall": "prisma generate",
+		"vercel-build": "prisma migrate deploy && next build"
 	},
 	"dependencies": {
 		"@emotion/react": "^11.13.3",

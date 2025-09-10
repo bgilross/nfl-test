@@ -4,12 +4,15 @@
    - `npm run seed`
 
 ### Dedupe & Latest Endpoint
-* Dedupe: Scraper skips inserting a snapshot if identical `valueCurrent` and `rank` appeared for same (team, category) within last hour.
-* DB index enforces minute-level uniqueness pattern to reduce spam.
-* Latest data: `GET /api/latest` returns each category with the latest snapshot per team.
+
+- Dedupe: Scraper skips inserting a snapshot if identical `valueCurrent` and `rank` appeared for same (team, category) within last hour.
+- DB index enforces minute-level uniqueness pattern to reduce spam.
+- Latest data: `GET /api/latest` returns each category with the latest snapshot per team.
 
 ### Scheduling
+
 Local Windows Task Scheduler example (every 2 hours):
+
 1. Create Basic Task -> Name: NFL Scrape
 2. Trigger: Daily, repeat every 2 hours (Advanced Settings)
 3. Action: Start a Program
@@ -18,11 +21,13 @@ Local Windows Task Scheduler example (every 2 hours):
    (Alternatively use a separate script curling the deployed /api/scrape route.)
 
 Vercel Cron (Settings > Cron Jobs) example:
-* Path: /api/scrape
-* Schedule: 0 * * * * (hourly)
-* Method: POST
+
+- Path: /api/scrape
+- Schedule: 0 \* \* \* \* (hourly)
+- Method: POST
 
 Set `SCRAPE_API_KEY` and include header in cron if you enable auth.
+
 ## NFL Rankings / Stats App
 
 Full-stack Next.js (Pages Router) application for ingesting and displaying football team ranking & efficiency statistics scraped from public sources (e.g. TeamRankings / ESPN). Legacy Python backend was removed; persistence handled via Prisma + PostgreSQL.
@@ -52,7 +57,8 @@ Full-stack Next.js (Pages Router) application for ingesting and displaying footb
 
 1. Install deps: `npm install`
 2. Set environment variables (create `.env.local`):
-   - `DATABASE_URL=postgresql://user:pass@host:5432/dbname?schema=public`
+   - `DATABASE_URL=postgresql://user:pass@host:5432/dbname?sslmode=require&pgbouncer=true`
+   - `DIRECT_URL=postgresql://user:pass@host:5432/dbname?sslmode=require`
    - (optional) `SCRAPE_API_KEY=your-key`
 3. Run database migrations / generate client:
    - `npm run prisma:migrate`
@@ -62,7 +68,18 @@ Full-stack Next.js (Pages Router) application for ingesting and displaying footb
 
 ### Deployment (Vercel)
 
-The project deploys as a Node (Next.js) app. Python artifacts were removed; `.vercelignore` trimmed. Ensure `DATABASE_URL` (and optional `SCRAPE_API_KEY`) are set in Vercel project settings. Prisma generates client during build automatically (`postinstall`).
+The project deploys as a Node (Next.js) app. Ensure the following env vars are configured in Vercel Project Settings:
+
+- `DATABASE_URL` (Neon pooled URL, often contains `-pooler` host and `pgbouncer=true`)
+- `DIRECT_URL` (Neon direct, non-pooled URL)
+- `SCRAPE_API_KEY` (optional)
+
+Build pipeline runs `prisma migrate deploy` before `next build` to apply migrations on the production DB automatically (see `vercel.json`).
+
+To backfill production data after first deploy:
+
+1. Trigger scrape on the deployed URL: `POST /api/scrape` (include header `x-api-key` if set)
+2. Verify data: `GET /api/categories`, `GET /api/teams`, `GET /api/latest`
 
 ### Scraper Notes
 
@@ -87,7 +104,8 @@ Suggested improvements:
 ### Scripts
 
 - `npm run dev` – Start dev server
-- `npm run build` – Production build
+- `npm run build` – Production build (local only)
+- `npm run vercel-build` – Production build for Vercel: `prisma migrate deploy && next build`
 - `npm start` – Run built app
 - `npm run lint` – Lint
 - `npm run prisma:migrate` – Run dev migration (creates new migration)

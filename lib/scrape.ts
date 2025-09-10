@@ -36,7 +36,10 @@ export interface ParsedRow {
 }
 
 // Exposed for unit testing of dedupe logic
-export function shouldInsertSnapshot(recent: { valueCurrent: number | null; rank: number | null } | null, row: ParsedRow): boolean {
+export function shouldInsertSnapshot(
+	recent: { valueCurrent: number | null; rank: number | null } | null,
+	row: ParsedRow
+): boolean {
 	if (!recent) return true
 	// If both key metrics identical, skip
 	const rc = recent.valueCurrent
@@ -187,11 +190,19 @@ export async function scrapeAndStore(seasonYear?: number) {
 						categoryId: category.id,
 						createdAt: { gt: new Date(Date.now() - 60 * 60 * 1000) },
 					},
-					orderBy: { createdAt: 'desc' },
+					orderBy: { createdAt: "desc" },
 				})
 			}
-			if (!shouldInsertSnapshot(recent && { valueCurrent: recent.valueCurrent, rank: recent.rank }, r)) {
-				logger.debug({ team: r.team, category: cat.slug }, "skip duplicate snapshot")
+			if (
+				!shouldInsertSnapshot(
+					recent && { valueCurrent: recent.valueCurrent, rank: recent.rank },
+					r
+				)
+			) {
+				logger.debug(
+					{ team: r.team, category: cat.slug },
+					"skip duplicate snapshot"
+				)
 				continue
 			}
 			await prisma.statSnapshot.create({
