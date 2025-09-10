@@ -1,4 +1,7 @@
+import { useState } from "react"
 import CircularProgress from "@mui/material/CircularProgress"
+import Button from "@mui/material/Button"
+import Paper from "@mui/material/Paper"
 
 const DebugPanel = () => {
 	const [open, setOpen] = useState(false)
