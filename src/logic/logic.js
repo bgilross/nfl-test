@@ -34,9 +34,14 @@ const toCandidates = (locationName, displayName) => {
 export const getBackendTeamAggregate = async (locationName, displayName) => {
 	// Hits Next.js API route /api/team/[name]
 	const candidates = toCandidates(locationName, displayName)
+	try {
+		console.debug && console.debug('[getBackendTeamAggregate] candidates:', candidates, { locationName, displayName })
+	} catch (e) {}
 	for (const name of candidates) {
+		try { console.debug && console.debug('[getBackendTeamAggregate] trying candidate:', name) } catch(e){}
 		try {
 			const res = await fetch(`/api/team/${encodeURIComponent(name)}`)
+			try { console.debug && console.debug('[getBackendTeamAggregate] candidate response:', name, res.status) } catch(e){}
 			if (!res.ok) continue
 			const data = await res.json()
 			if (!data?.snapshots) continue
@@ -67,8 +72,10 @@ export const getBackendTeamAggregate = async (locationName, displayName) => {
 	// Fallback: fetch /api/teams and best-match against provided names
 	try {
 		const baseQ = normalize(displayName || locationName || "")
+	try { console.debug && console.debug('[getBackendTeamAggregate] fallback baseQ:', baseQ) } catch(e){}
 		if (!baseQ) return null
 		const teamsRes = await fetch(`/api/teams`)
+	try { console.debug && console.debug('[getBackendTeamAggregate] fetched /api/teams', teamsRes.status) } catch(e){}
 		if (!teamsRes.ok) return null
 		const teams = await teamsRes.json()
 		let best = null
@@ -91,6 +98,7 @@ export const getBackendTeamAggregate = async (locationName, displayName) => {
 			}
 		}
 		if (best && bestScore > 0) {
+			try { console.debug && console.debug('[getBackendTeamAggregate] best match:', best.name, bestScore) } catch(e){}
 			const res = await fetch(`/api/team/${encodeURIComponent(best.name)}`)
 			if (res.ok) {
 				const data = await res.json()
