@@ -195,17 +195,7 @@ const TeamTable = ({ data, teamNum }) => {
 												>
 													<div>
 														<div>{categoryName.toUpperCase()}</div>
-														<button
-															onClick={() => {
-																console.log(
-																	Object.entries(players).map(
-																		(player, stat) => stat
-																	)
-																)
-															}}
-														>
-															Check
-														</button>
+														{/* Removed debug Check button */}
 													</div>
 													<div>
 														{categoryName === "defensive"

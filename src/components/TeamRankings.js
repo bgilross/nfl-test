@@ -5,16 +5,17 @@ const TeamRankings = ({ data }) => {
 	const [backendStats, setBackendStats] = useState(null)
 
 	useEffect(() => {
+		let cancelled = false
 		;(async () => {
 			const loc = data?.location || data?.teamData?.location
 			const disp = data?.teamData?.displayName
-			if (loc || disp) {
-				const agg = await getBackendTeamAggregate(loc, disp)
-				setBackendStats(agg)
-			} else {
-				setBackendStats(null)
-			}
+			if (!loc && !disp) return setBackendStats(null)
+			const agg = await getBackendTeamAggregate(loc, disp)
+			if (!cancelled) setBackendStats(agg)
 		})()
+		return () => {
+			cancelled = true
+		}
 	}, [data?.location, data?.teamData?.location, data?.teamData?.displayName])
 
 	return (

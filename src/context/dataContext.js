@@ -12,7 +12,7 @@ export const DataProvider = ({ children }) => {
 	const [error, setError] = useState(null)
 	const [selectedYear, setSelectedYear] = useState(getSeasonYear())
 
-	const cache = {}
+	// (Removed unused local cache – can reintroduce with a Map if needed for memoization)
 
 	const handleGetAllData = async () => {
 		if (!teamName) return

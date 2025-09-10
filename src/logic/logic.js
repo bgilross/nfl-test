@@ -1,8 +1,11 @@
 import teamLegend from "../data/team_legend.json"
 import axios from "axios"
-// Removed static teamRankings JSON dependency (migrated to backend-powered data)
 
-const apiBase = process.env.REACT_APP_API_BASE || ""
+// Axios instance with sane timeout for ESPN endpoints
+const http = axios.create({ timeout: 10000 })
+
+// Utility: simple delay (optional future throttling)
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 const toCandidates = (locationName, displayName) => {
 	const cands = []
@@ -22,14 +25,36 @@ const toCandidates = (locationName, displayName) => {
 }
 
 export const getBackendTeamAggregate = async (locationName, displayName) => {
+	// Hits Next.js API route /api/team/[name]
 	const candidates = toCandidates(locationName, displayName)
 	for (const name of candidates) {
 		try {
-			const url = `${apiBase}/team/${encodeURIComponent(name)}`
-			const res = await axios.get(url)
-			return res.data
-		} catch (e) {
-			// try next candidate on 404/other errors
+			const res = await fetch(`/api/team/${encodeURIComponent(name)}`)
+			if (!res.ok) continue
+			const data = await res.json()
+			if (!data?.snapshots) continue
+			// Transform snapshots to categories map expected by UI (snake_case fields)
+			const categories = {}
+			for (const snap of data.snapshots) {
+				const key = snap.category?.name || snap.category?.slug || "unknown"
+				if (!categories[key]) categories[key] = {}
+				// Preserve most recent only (snapshots assumed ordered desc from API)
+				if (!categories[key].current_year) {
+					categories[key] = {
+						current_year: snap.currentYear ?? null,
+						prev_year: snap.prevYear ?? null,
+						value_current: snap.valueCurrent ?? null,
+						value_prev: snap.valuePrev ?? null,
+						last_1: snap.last1 ?? null,
+						last_3: snap.last3 ?? null,
+						home: snap.home ?? null,
+						away: snap.away ?? null,
+					}
+				}
+			}
+			return { team: data.team, categories }
+		} catch (_) {
+			// try next candidate
 		}
 	}
 	return null
@@ -80,20 +105,12 @@ const getTeamID = (teamName) => {
 
 export const getNextGameID = async (teamName) => {
 	const teamID = getTeamID(teamName)
-
-	if (!teamID) {
-		console.error("Error: getTeamID returned null")
-		return null
-	}
+	if (!teamID) return null
 	const apiUrl = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${teamID}`
-
 	try {
-		const response = await axios.get(apiUrl)
-
-		const nextEventID = response.data.team.nextEvent[0].id
-		return nextEventID
-	} catch (error) {
-		console.error("Error fetching data:", error)
+		const response = await http.get(apiUrl)
+		return response.data.team.nextEvent?.[0]?.id || null
+	} catch (e) {
 		return null
 	}
 }
@@ -107,7 +124,7 @@ export const getNextOpp = async (teamName, seasonYear = getSeasonYear()) => {
 	}
 	const apiUrl = `https://cdn.espn.com/core/nfl/game?xhr=1&gameId=${nextGameID}`
 	try {
-		const response = await axios.get(apiUrl)
+		const response = await http.get(apiUrl)
 		const team1 =
 			response.data.gamepackageJSON.boxscore.teams[0].team.displayName
 
@@ -250,23 +267,15 @@ export const getTeamStatData = async (
 
 const getPrevGameData = async (teamName, seasonYear = getSeasonYear()) => {
 	const apiUrl = `https://cdn.espn.com/core/nfl/boxscore?xhr=1&gameId=`
-	let gameDataPromises = []
 	const gameIds = await getAllTeamsGameIds(teamName, seasonYear)
-
-	gameIds.forEach((gameId) => {
-		gameDataPromises.push(
-			axios.get(`${apiUrl}${gameId}`).then((response) => {
-				// cache[gameId] = response
-				return response
-			})
-		)
-	})
-
+	if (!gameIds.length) return []
 	try {
-		const responses = await Promise.all(gameDataPromises)
+		const responses = await Promise.all(
+			gameIds.map((gameId) => http.get(`${apiUrl}${gameId}`))
+		)
 		return responses
-	} catch (err) {
-		console.log(err)
+	} catch (_) {
+		return []
 	}
 }
 
@@ -277,43 +286,24 @@ const getTeamsGameIdByWeek = async (
 ) => {
 	const apiUrl = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${seasonYear}&seasontype=2&week=${week}`
 	try {
-		const response = await axios.get(apiUrl)
-
-		// Check if the events array is not empty
-		if (!response.data.events || response.data.events.length === 0) {
-			console.log(`No events found for week ${week}`)
-			return null
-		}
-
-		// Convert team name to lowercase for case-insensitive comparison
-		const teamGame = response.data.events.find((event) =>
-			event.name.toLowerCase().includes(teamName.toLowerCase())
+		const response = await http.get(apiUrl)
+		const events = response.data.events || []
+		if (!events.length) return null
+		const teamGame = events.find((e) =>
+			e.name.toLowerCase().includes(teamName.toLowerCase())
 		)
-
-		if (!teamGame) {
-			console.log(`No game found for ${teamName} in week ${week}`)
-			return null // Ensure we return null if not found
-		}
-
-		return teamGame.id // Return the game ID
-	} catch (err) {
-		console.log(`Error fetching data for ${teamName} week: ${week}`, err)
-		return null // Return null in case of error
+		return teamGame ? teamGame.id : null
+	} catch (_) {
+		return null
 	}
 }
 
 const getAllTeamsGameIds = async (teamName, seasonYear = getSeasonYear()) => {
-	let gameIds = []
-
-	// For past seasons, fetch full 18 weeks; current season clamp to week number
 	const nowSeason = getSeasonYear()
 	const currentWeek = seasonYear < nowSeason ? 18 : getWeek(seasonYear)
-
-	// Iterate through the weeks and fetch game IDs
-	for (let week = 1; week <= currentWeek; week++) {
-		const gameId = await getTeamsGameIdByWeek(teamName, week, seasonYear)
-		gameIds.push(gameId)
-	}
-
-	return gameIds.filter((id) => id !== null) // Filter out any null IDs
+	const weeks = Array.from({ length: currentWeek }, (_, i) => i + 1)
+	const results = await Promise.all(
+		weeks.map((w) => getTeamsGameIdByWeek(teamName, w, seasonYear))
+	)
+	return results.filter(Boolean)
 }

@@ -1,9 +1,10 @@
+import * as React from "react"
 import dynamic from "next/dynamic"
 import Head from "next/head"
 
 const LegacyApp = dynamic(() => import("../src/App"), { ssr: false })
 
-export default function Home() {
+export default function Home(): React.ReactElement {
 	return (
 		<>
 			<Head>
