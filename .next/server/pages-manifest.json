@@ -1,8 +1,0 @@
-{
-  "/_app": "pages/_app.js",
-  "/_error": "pages/_error.js",
-  "/_document": "pages/_document.js",
-  "/api/scrape": "pages/api/scrape.js",
-  "/api/teams": "pages/api/teams.js",
-  "/api/categories": "pages/api/categories.js"
-}
