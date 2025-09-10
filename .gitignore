@@ -35,3 +35,11 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 
+# Editors/OS
+.vscode/
+.idea/
+Thumbs.db
+
+# Logs
+*.log
+
