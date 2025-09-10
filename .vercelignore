@@ -1,8 +1,28 @@
-# Ignore backend Python service so Vercel only builds the React app
+## Vercel ignore file
 
-backend/
-_.py
-alembic/
-_.db
-.venv/
-\*\*/**pycache**/
+# Only exclude things not needed for build deployment.
+
+# (Python backend removed – old entries deleted.)
+
+# Local/dev artifacts
+
+_.log
+.DS_Store
+_.sqlite
+
+# Node / tooling caches (optional – Vercel already strips these but kept for clarity)
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log\*
+
+# Editor settings
+
+.vscode/
+.idea/
+
+# Test coverage output (if added later)
+
+coverage/
+
+# Prisma generated client is needed (don't ignore node_modules/.prisma)

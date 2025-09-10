@@ -1,70 +1,83 @@
-# Getting Started with Create React App
+## NFL Rankings / Stats App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Full-stack Next.js (Pages Router) application for ingesting and displaying football team ranking & efficiency statistics scraped from public sources (e.g. TeamRankings / ESPN). Legacy Python backend was removed; persistence handled via Prisma + PostgreSQL.
 
-## Available Scripts
+### Stack
 
-In the project directory, you can run:
+- Next.js 14 / React 18
+- Prisma ORM (`prisma/schema.prisma`) -> PostgreSQL
+- Cheerio-based scraper (server-side) invoked via API route `/api/scrape`
+- MUI (Material UI v6) for components
 
-### `npm start`
+### Data Model (simplified)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Team(id, name)
+- Category(id, slug, name)
+- StatSnapshot: point-in-time metric values (valueCurrent, valuePrev, last1, last3, home, away, rank, seasonYear, timestamps)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Key API Routes
 
-### `npm test`
+- `GET /api/health` – health check
+- `POST /api/scrape` – triggers scrape (optional header `x-api-key` enforced if `SCRAPE_API_KEY` is set)
+- `GET /api/categories` – list categories with latest snapshot metadata
+- `GET /api/teams` – list teams
+- `GET /api/team/[name]` – snapshots grouped by category for a specific team
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Local Development
 
-### `npm run build`
+1. Install deps: `npm install`
+2. Set environment variables (create `.env.local`):
+   - `DATABASE_URL=postgresql://user:pass@host:5432/dbname?schema=public`
+   - (optional) `SCRAPE_API_KEY=your-key`
+3. Run database migrations / generate client:
+   - `npm run prisma:migrate`
+   - `npm run prisma:generate`
+4. Start dev server: `npm run dev` (http://localhost:3000)
+5. Trigger a scrape: `curl -X POST http://localhost:3000/api/scrape` (add header `x-api-key` if configured)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Deployment (Vercel)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+The project deploys as a Node (Next.js) app. Python artifacts were removed; `.vercelignore` trimmed. Ensure `DATABASE_URL` (and optional `SCRAPE_API_KEY`) are set in Vercel project settings. Prisma generates client during build automatically (`postinstall`).
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Scraper Notes
 
-### `npm run eject`
+Current implementation captures baseline metrics (rank + current value). Enhancements planned:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- Historical diff population (prevYear / valuePrev)
+- Rolling windows (last1, last3)
+- Home / away splits
+- Retry & backoff, structured logging
+- Scheduled invocation (Vercel cron or external scheduler)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Contributing / Next Steps
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Suggested improvements:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+1. Resolve missing generated Prisma delegate typings (.prisma folder visibility issue) and remove any temporary `any` casts.
+2. Add Jest tests for scraper normalization & API responses.
+3. Add rate limiting & caching (e.g. incremental static regen for read-heavy endpoints).
+4. Implement richer category metadata and UI filtering.
+5. Add queue / job scheduling for periodic scraping.
 
-## Learn More
+### Scripts
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- `npm run dev` – Start dev server
+- `npm run build` – Production build
+- `npm start` – Run built app
+- `npm run lint` – Lint
+- `npm run prisma:migrate` – Run dev migration (creates new migration)
+- `npm run prisma:generate` – Regenerate Prisma client
+- `npm test` – Jest tests (placeholder)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Environment & Safety
 
-### Code Splitting
+- Never commit real API keys or private database credentials.
+- Use a separate database/schema for local development.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### License
 
-### Analyzing the Bundle Size
+Internal / personal project (no license specified). Add a LICENSE file if external contribution is desired.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Legacy CRA boilerplate removed in favor of current stack documentation.
