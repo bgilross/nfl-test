@@ -53,8 +53,32 @@ export default async function handler(
 		}
 	}
 
-	if (!best || bestScore === 0)
-		return res.status(404).json({ error: "Not found" })
+	if (!best || bestScore === 0) {
+		// Return scored candidates for debugging so we can see why a name failed to match
+		const qTokens = q.split(" ").filter(Boolean)
+		const scored = allTeams
+			.map((t) => {
+				const tn = normalize(t.name)
+				let score = 0
+				if (tn === q) score += 100
+				if (tn.includes(q)) score += 50
+				if (q.includes(tn) && tn.length > 0) score += 60
+				const tTokens = tn.split(" ").filter(Boolean)
+				for (const tok of tTokens) if (qTokens.includes(tok)) score += 10
+				const lastQ = qTokens[qTokens.length - 1]
+				const lastT = tTokens[tTokens.length - 1]
+				if (lastQ && lastT && lastQ === lastT) score += 20
+				return { team: t.name, tn, score }
+			})
+			.sort((a, b) => b.score - a.score)
+		return res
+			.status(404)
+			.json({
+				error: "Not found",
+				query: queryName,
+				scored: scored.slice(0, 8),
+			})
+	}
 
 	const team = best
 
@@ -64,5 +88,10 @@ export default async function handler(
 		take: 100,
 		include: { category: true },
 	})
+	if (String(req.query.debug) === "1") {
+		return res
+			.status(200)
+			.json({ team, bestScore, snapshotCount: snapshots.length, snapshots })
+	}
 	res.status(200).json({ team, snapshots })
 }
