@@ -164,6 +164,24 @@ export async function scrapeAndStore(seasonYear?: number) {
 				update: {},
 				create: { name: r.team },
 			})
+			// Dedupe: if a snapshot for this team/category within last hour has identical valueCurrent & rank skip insert
+			if (r.valueCurrent != null || r.rank != null) {
+				const recent = await prisma.statSnapshot.findFirst({
+					where: {
+						teamId: team.id,
+						categoryId: category.id,
+						createdAt: { gt: new Date(Date.now() - 60 * 60 * 1000) },
+					},
+					orderBy: { createdAt: 'desc' },
+				})
+				if (
+					recent &&
+					recent.valueCurrent === r.valueCurrent &&
+					recent.rank === r.rank
+				) {
+					continue
+				}
+			}
 			await prisma.statSnapshot.create({
 				data: {
 					teamId: team.id,

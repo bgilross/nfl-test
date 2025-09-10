@@ -1,3 +1,10 @@
+5. Trigger a scrape: `curl -X POST http://localhost:3000/api/scrape` (add header `x-api-key` if configured)
+6. (Optional) Run seed without starting server (build first):
+   - `npm run build`
+   - `npm run seed`
+
+### Dedupe Logic
+Scraper skips inserting a snapshot if an entry with identical `valueCurrent` and `rank` for the same team & category exists in the last hour. A supporting minute-level unique index prevents burst duplicates.
 ## NFL Rankings / Stats App
 
 Full-stack Next.js (Pages Router) application for ingesting and displaying football team ranking & efficiency statistics scraped from public sources (e.g. TeamRankings / ESPN). Legacy Python backend was removed; persistence handled via Prisma + PostgreSQL.

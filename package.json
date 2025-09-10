@@ -12,7 +12,8 @@
 		"lint": "next lint",
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
-		"test": "jest"
+		"test": "jest",
+		"seed": "node scripts/seed.cjs"
 	},
 	"dependencies": {
 		"@emotion/react": "^11.13.3",
