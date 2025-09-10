@@ -61,6 +61,7 @@ export default async function handler(
 			normalized: q,
 			best: { id: best.id, name: best.name, score: bestScore },
 			snapshotCount: snapshots.length,
+			snapshots,
 			scored: scored.slice(0, 8),
 		})
 }

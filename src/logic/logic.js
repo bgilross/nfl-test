@@ -99,18 +99,36 @@ export const getBackendTeamAggregate = async (locationName, displayName) => {
 			const dres = await fetch(`/api/team-debug?name=${probeName}`)
 			if (dres.ok) {
 				const dbg = await dres.json()
+				// If snapshots are present, build categories directly from them
+				if (dbg?.snapshots?.length) {
+					const categories = {}
+					for (const snap of dbg.snapshots) {
+						const key = snap.category?.name || snap.category?.slug || "unknown"
+						if (!categories[key]) categories[key] = {}
+						if (!categories[key].current_year) {
+							categories[key] = {
+								current_year: snap.currentYear ?? null,
+								prev_year: snap.prevYear ?? null,
+								value_current: snap.valueCurrent ?? null,
+								value_prev: snap.valuePrev ?? null,
+								last_1: snap.last1 ?? null,
+								last_3: snap.last3 ?? null,
+								home: snap.home ?? null,
+								away: snap.away ?? null,
+							}
+						}
+					}
+					return { team: { id: dbg?.best?.id, name: dbg?.best?.name }, categories }
+				}
+				// Else, if a best match exists but snapshots aren't returned, try canonical route once
 				if (dbg?.best?.name) {
-					// Retry using the DB canonical name
-					const res2 = await fetch(
-						`/api/team/${encodeURIComponent(dbg.best.name)}`
-					)
+					const res2 = await fetch(`/api/team/${encodeURIComponent(dbg.best.name)}`)
 					if (res2.ok) {
 						const data = await res2.json()
 						if (data?.snapshots) {
 							const categories = {}
 							for (const snap of data.snapshots) {
-								const key =
-									snap.category?.name || snap.category?.slug || "unknown"
+								const key = snap.category?.name || snap.category?.slug || "unknown"
 								if (!categories[key]) categories[key] = {}
 								if (!categories[key].current_year) {
 									categories[key] = {
