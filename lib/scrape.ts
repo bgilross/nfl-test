@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio"
 import { prisma } from "./prisma"
+import { logger } from "./logger"
 
 // Placeholder category endpoints (slugs) – adjust to real TeamRankings URLs
 export const STAT_ENDPOINTS: { slug: string; name: string; url: string }[] = [
@@ -32,6 +33,17 @@ export interface ParsedRow {
 	home?: number
 	away?: number
 	seasonYear?: number
+}
+
+// Exposed for unit testing of dedupe logic
+export function shouldInsertSnapshot(recent: { valueCurrent: number | null; rank: number | null } | null, row: ParsedRow): boolean {
+	if (!recent) return true
+	// If both key metrics identical, skip
+	const rc = recent.valueCurrent
+	const rr = recent.rank
+	const sameValue = rc === (row.valueCurrent ?? null)
+	const sameRank = rr === (row.rank ?? null)
+	return !(sameValue && sameRank)
 }
 
 // Simplified header mapping stub – expand with robust logic port later
@@ -141,8 +153,10 @@ function parseTable(html: string, seasonYear?: number): ParsedRow[] {
 }
 
 export async function scrapeAndStore(seasonYear?: number) {
+	logger.info({ seasonYear }, "scrape start")
 	const results: Record<string, number> = {}
 	for (const cat of STAT_ENDPOINTS) {
+		logger.info({ category: cat.slug }, "fetch category")
 		const res = await fetch(cat.url, {
 			headers: { "User-Agent": "Mozilla/5.0 (compatible; StatsScraper/1.0)" },
 			// Could add Accept-Language etc if needed.
@@ -165,8 +179,9 @@ export async function scrapeAndStore(seasonYear?: number) {
 				create: { name: r.team },
 			})
 			// Dedupe: if a snapshot for this team/category within last hour has identical valueCurrent & rank skip insert
+			let recent: any = null
 			if (r.valueCurrent != null || r.rank != null) {
-				const recent = await prisma.statSnapshot.findFirst({
+				recent = await prisma.statSnapshot.findFirst({
 					where: {
 						teamId: team.id,
 						categoryId: category.id,
@@ -174,13 +189,10 @@ export async function scrapeAndStore(seasonYear?: number) {
 					},
 					orderBy: { createdAt: 'desc' },
 				})
-				if (
-					recent &&
-					recent.valueCurrent === r.valueCurrent &&
-					recent.rank === r.rank
-				) {
-					continue
-				}
+			}
+			if (!shouldInsertSnapshot(recent && { valueCurrent: recent.valueCurrent, rank: recent.rank }, r)) {
+				logger.debug({ team: r.team, category: cat.slug }, "skip duplicate snapshot")
+				continue
 			}
 			await prisma.statSnapshot.create({
 				data: {
@@ -200,6 +212,8 @@ export async function scrapeAndStore(seasonYear?: number) {
 			})
 		}
 		results[cat.slug] = rows.length
+		logger.info({ category: cat.slug, rows: rows.length }, "category stored")
 	}
+	logger.info({ results }, "scrape complete")
 	return { stored: results }
 }

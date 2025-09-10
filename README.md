@@ -3,8 +3,26 @@
    - `npm run build`
    - `npm run seed`
 
-### Dedupe Logic
-Scraper skips inserting a snapshot if an entry with identical `valueCurrent` and `rank` for the same team & category exists in the last hour. A supporting minute-level unique index prevents burst duplicates.
+### Dedupe & Latest Endpoint
+* Dedupe: Scraper skips inserting a snapshot if identical `valueCurrent` and `rank` appeared for same (team, category) within last hour.
+* DB index enforces minute-level uniqueness pattern to reduce spam.
+* Latest data: `GET /api/latest` returns each category with the latest snapshot per team.
+
+### Scheduling
+Local Windows Task Scheduler example (every 2 hours):
+1. Create Basic Task -> Name: NFL Scrape
+2. Trigger: Daily, repeat every 2 hours (Advanced Settings)
+3. Action: Start a Program
+   Program/script: powershell.exe
+   Args: -NoProfile -ExecutionPolicy Bypass -Command "cd 'C:/Users/yourUser/VSCodeProjects/nfl-test'; npm run dev | Out-Null"
+   (Alternatively use a separate script curling the deployed /api/scrape route.)
+
+Vercel Cron (Settings > Cron Jobs) example:
+* Path: /api/scrape
+* Schedule: 0 * * * * (hourly)
+* Method: POST
+
+Set `SCRAPE_API_KEY` and include header in cron if you enable auth.
 ## NFL Rankings / Stats App
 
 Full-stack Next.js (Pages Router) application for ingesting and displaying football team ranking & efficiency statistics scraped from public sources (e.g. TeamRankings / ESPN). Legacy Python backend was removed; persistence handled via Prisma + PostgreSQL.
