@@ -7,6 +7,13 @@ const http = axios.create({ timeout: 10000 })
 // Utility: simple delay (optional future throttling)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
+const normalize = (s = "") =>
+	s
+		.toLowerCase()
+		.replace(/[^a-z0-9 ]+/g, " ")
+		.replace(/\s+/g, " ")
+		.trim()
+
 const toCandidates = (locationName, displayName) => {
 	const cands = []
 	if (locationName) cands.push(locationName)
@@ -56,6 +63,61 @@ export const getBackendTeamAggregate = async (locationName, displayName) => {
 		} catch (_) {
 			// try next candidate
 		}
+	}
+	// Fallback: fetch /api/teams and best-match against provided names
+	try {
+		const baseQ = normalize(displayName || locationName || "")
+		if (!baseQ) return null
+		const teamsRes = await fetch(`/api/teams`)
+		if (!teamsRes.ok) return null
+		const teams = await teamsRes.json()
+		let best = null
+		let bestScore = 0
+		const qTokens = baseQ.split(" ").filter(Boolean)
+		for (const t of teams) {
+			const tn = normalize(t.name)
+			let score = 0
+			if (tn === baseQ) score += 100
+			if (tn && baseQ.includes(tn)) score += 60
+			if (tn && tn.includes(baseQ)) score += 50
+			const tTokens = tn.split(" ").filter(Boolean)
+			for (const tok of tTokens) if (qTokens.includes(tok)) score += 10
+			const lastQ = qTokens[qTokens.length - 1]
+			const lastT = tTokens[tTokens.length - 1]
+			if (lastQ && lastT && lastQ === lastT) score += 20
+			if (score > bestScore) {
+				bestScore = score
+				best = t
+			}
+		}
+		if (best && bestScore > 0) {
+			const res = await fetch(`/api/team/${encodeURIComponent(best.name)}`)
+			if (res.ok) {
+				const data = await res.json()
+				if (data?.snapshots) {
+					const categories = {}
+					for (const snap of data.snapshots) {
+						const key = snap.category?.name || snap.category?.slug || "unknown"
+						if (!categories[key]) categories[key] = {}
+						if (!categories[key].current_year) {
+							categories[key] = {
+								current_year: snap.currentYear ?? null,
+								prev_year: snap.prevYear ?? null,
+								value_current: snap.valueCurrent ?? null,
+								value_prev: snap.valuePrev ?? null,
+								last_1: snap.last1 ?? null,
+								last_3: snap.last3 ?? null,
+								home: snap.home ?? null,
+								away: snap.away ?? null,
+							}
+						}
+					}
+					return { team: data.team, categories }
+				}
+			}
+		}
+	} catch (_) {
+		// silent fallback
 	}
 	return null
 }
