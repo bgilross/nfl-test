@@ -83,6 +83,57 @@ export const getBackendTeamAggregate = async (locationName, displayName) => {
 			// try next candidate
 		}
 	}
+
+	// QUICK FALLBACK: some deployments (static export) return 404 for dynamic routes.
+	// Try the non-dynamic debug endpoint we added: /api/team-debug?name=...
+	try {
+		const probeName = encodeURIComponent(displayName || locationName || "")
+		if (probeName) {
+			try {
+				console.debug &&
+					console.debug(
+						"[getBackendTeamAggregate] trying /api/team-debug for",
+						probeName
+					)
+			} catch (e) {}
+			const dres = await fetch(`/api/team-debug?name=${probeName}`)
+			if (dres.ok) {
+				const dbg = await dres.json()
+				if (dbg?.best?.name) {
+					// Retry using the DB canonical name
+					const res2 = await fetch(
+						`/api/team/${encodeURIComponent(dbg.best.name)}`
+					)
+					if (res2.ok) {
+						const data = await res2.json()
+						if (data?.snapshots) {
+							const categories = {}
+							for (const snap of data.snapshots) {
+								const key =
+									snap.category?.name || snap.category?.slug || "unknown"
+								if (!categories[key]) categories[key] = {}
+								if (!categories[key].current_year) {
+									categories[key] = {
+										current_year: snap.currentYear ?? null,
+										prev_year: snap.prevYear ?? null,
+										value_current: snap.valueCurrent ?? null,
+										value_prev: snap.valuePrev ?? null,
+										last_1: snap.last1 ?? null,
+										last_3: snap.last3 ?? null,
+										home: snap.home ?? null,
+										away: snap.away ?? null,
+									}
+								}
+							}
+							return { team: data.team, categories }
+						}
+					}
+				}
+			}
+		}
+	} catch (e) {
+		// ignore and continue to heavier fallback
+	}
 	// Fallback: fetch /api/teams and best-match against provided names
 	try {
 		const baseQ = normalize(displayName || locationName || "")
