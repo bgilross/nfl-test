@@ -1,9 +1,8 @@
 name: Scheduled Scrape
 
 on:
-  schedule:
-    - cron: "0 */6 * * *" # every 6 hours
   workflow_dispatch:
+  # schedule removed to disable automatic scrapes
 
 jobs:
   scrape:

@@ -54,13 +54,12 @@ export default async function handler(
 		include: { category: true },
 	})
 
-	return res
-		.status(200)
-		.json({
-			name,
-			normalized: q,
-			best: { id: best.id, name: best.name, score: bestScore },
-			snapshotCount: snapshots.length,
-			scored: scored.slice(0, 8),
-		})
+	return res.status(200).json({
+		name,
+		normalized: q,
+		best: { id: best.id, name: best.name, score: bestScore },
+		snapshotCount: snapshots.length,
+		snapshots,
+		scored: scored.slice(0, 8),
+	})
 }
