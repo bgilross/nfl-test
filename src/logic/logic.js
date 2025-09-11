@@ -118,17 +118,23 @@ export const getBackendTeamAggregate = async (locationName, displayName) => {
 							}
 						}
 					}
-					return { team: { id: dbg?.best?.id, name: dbg?.best?.name }, categories }
+					return {
+						team: { id: dbg?.best?.id, name: dbg?.best?.name },
+						categories,
+					}
 				}
 				// Else, if a best match exists but snapshots aren't returned, try canonical route once
 				if (dbg?.best?.name) {
-					const res2 = await fetch(`/api/team/${encodeURIComponent(dbg.best.name)}`)
+					const res2 = await fetch(
+						`/api/team/${encodeURIComponent(dbg.best.name)}`
+					)
 					if (res2.ok) {
 						const data = await res2.json()
 						if (data?.snapshots) {
 							const categories = {}
 							for (const snap of data.snapshots) {
-								const key = snap.category?.name || snap.category?.slug || "unknown"
+								const key =
+									snap.category?.name || snap.category?.slug || "unknown"
 								if (!categories[key]) categories[key] = {}
 								if (!categories[key].current_year) {
 									categories[key] = {
@@ -287,28 +293,47 @@ export const getNextGameID = async (teamName) => {
 export const getNextOpp = async (teamName, seasonYear = getSeasonYear()) => {
 	// nextEvent only applies to current season
 	if (seasonYear !== getSeasonYear()) return null
-	const nextGameID = await getNextGameID(teamName)
-	if (!nextGameID) {
-		return null
-	}
-	const apiUrl = `https://cdn.espn.com/core/nfl/game?xhr=1&gameId=${nextGameID}`
+
+	// First try: use team endpoint and read competitors directly from nextEvent
+	const teamID = getTeamID(teamName)
+	if (!teamID) return null
+	const teamUrl = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${teamID}`
 	try {
-		const response = await http.get(apiUrl)
-		const team1 =
-			response.data.gamepackageJSON.boxscore.teams[0].team.displayName
-
-		const team2 =
-			response.data.gamepackageJSON.boxscore.teams[1].team.displayName
-
-		if (team1.toLowerCase().includes(teamName.toLowerCase())) {
-			return team2
-		} else if (team2.toLowerCase().includes(teamName.toLowerCase())) {
-			return team1
-		} else {
-			return null
+		const teamResp = await http.get(teamUrl)
+		const nextEvt = teamResp.data?.team?.nextEvent?.[0]
+		const comps = nextEvt?.competitions?.[0]?.competitors
+		if (Array.isArray(comps) && comps.length === 2) {
+			const a = comps[0]?.team?.displayName || comps[0]?.team?.name
+			const b = comps[1]?.team?.displayName || comps[1]?.team?.name
+			if (a && b) {
+				const tn = teamName.toLowerCase()
+				if (a.toLowerCase().includes(tn)) return b
+				if (b.toLowerCase().includes(tn)) return a
+				// If neither includes, still return the "other" by proximity: prefer non-matching
+				return a // fallback arbitrary
+			}
 		}
+		// Fallback to game endpoint using header (more stable than boxscore for future games)
+		const nextGameID = nextEvt?.id
+		if (!nextGameID) return null
+		const gameUrl = `https://cdn.espn.com/core/nfl/game?xhr=1&gameId=${nextGameID}`
+		const gameResp = await http.get(gameUrl)
+		const competitors =
+			gameResp.data?.gamepackageJSON?.header?.competitions?.[0]?.competitors
+		if (Array.isArray(competitors) && competitors.length === 2) {
+			const names = competitors
+				.map((c) => c?.team?.displayName || c?.team?.name)
+				.filter(Boolean)
+			if (names.length === 2) {
+				const tn = teamName.toLowerCase()
+				if (names[0].toLowerCase().includes(tn)) return names[1]
+				if (names[1].toLowerCase().includes(tn)) return names[0]
+				return names[1] // arbitrary fallback
+			}
+		}
+		return null
 	} catch (error) {
-		console.error("Error fetching data:", error)
+		console.error("Error fetching next opponent:", error)
 		return null
 	}
 }
